@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -28,6 +29,9 @@ class MemberV1ApiE2ETest @Autowired constructor(
 ) {
     companion object {
         private const val ENDPOINT_REGISTER = "/api/v1/members/register"
+        private const val ENDPOINT_MY_INFO = "/api/v1/members/me"
+        private const val HEADER_LOGIN_ID = "X-Loopers-LoginId"
+        private const val HEADER_LOGIN_PW = "X-Loopers-LoginPw"
     }
 
     @AfterEach
@@ -208,6 +212,137 @@ class MemberV1ApiE2ETest @Autowired constructor(
 
             // assert
             assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+        }
+    }
+
+    @DisplayName("GET /api/v1/members/me")
+    @Nested
+    inner class GetMyInfo {
+
+        @DisplayName("유효한 인증 정보로 요청하면, 200 OK와 마스킹된 이름을 반환한다.")
+        @Test
+        fun returnsOkWithMaskedName_whenValidCredentialsAreProvided() {
+            // arrange
+            val rawPassword = "Test1234!"
+            val member = memberJpaRepository.save(
+                MemberModel(
+                    loginId = "testuser",
+                    password = passwordEncoder.encode(rawPassword),
+                    name = "홍길동",
+                    birthDate = "19900101",
+                    email = "test@example.com",
+                ),
+            )
+
+            val headers = HttpHeaders().apply {
+                set(HEADER_LOGIN_ID, member.loginId)
+                set(HEADER_LOGIN_PW, rawPassword)
+            }
+
+            // act
+            val responseType = object : ParameterizedTypeReference<ApiResponse<MemberV1Dto.MyInfoResponse>>() {}
+            val response = testRestTemplate.exchange(
+                ENDPOINT_MY_INFO,
+                HttpMethod.GET,
+                HttpEntity<Any>(headers),
+                responseType,
+            )
+
+            // assert
+            assertAll(
+                { assertThat(response.statusCode).isEqualTo(HttpStatus.OK) },
+                { assertThat(response.body?.data?.loginId).isEqualTo(member.loginId) },
+                { assertThat(response.body?.data?.name).isEqualTo("홍길*") },
+                { assertThat(response.body?.data?.birthDate).isEqualTo(member.birthDate) },
+                { assertThat(response.body?.data?.email).isEqualTo(member.email) },
+            )
+        }
+
+        @DisplayName("존재하지 않는 로그인 ID로 요청하면, 401 Unauthorized 응답을 받는다.")
+        @Test
+        fun returnsUnauthorized_whenLoginIdDoesNotExist() {
+            // arrange
+            val headers = HttpHeaders().apply {
+                set(HEADER_LOGIN_ID, "nonexistent")
+                set(HEADER_LOGIN_PW, "Test1234!")
+            }
+
+            // act
+            val responseType = object : ParameterizedTypeReference<ApiResponse<MemberV1Dto.MyInfoResponse>>() {}
+            val response = testRestTemplate.exchange(
+                ENDPOINT_MY_INFO,
+                HttpMethod.GET,
+                HttpEntity<Any>(headers),
+                responseType,
+            )
+
+            // assert
+            assertThat(response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+        }
+
+        @DisplayName("비밀번호가 일치하지 않으면, 401 Unauthorized 응답을 받는다.")
+        @Test
+        fun returnsUnauthorized_whenPasswordDoesNotMatch() {
+            // arrange
+            memberJpaRepository.save(
+                MemberModel(
+                    loginId = "testuser",
+                    password = passwordEncoder.encode("CorrectPass1!"),
+                    name = "홍길동",
+                    birthDate = "19900101",
+                    email = "test@example.com",
+                ),
+            )
+
+            val headers = HttpHeaders().apply {
+                set(HEADER_LOGIN_ID, "testuser")
+                set(HEADER_LOGIN_PW, "WrongPass123!")
+            }
+
+            // act
+            val responseType = object : ParameterizedTypeReference<ApiResponse<MemberV1Dto.MyInfoResponse>>() {}
+            val response = testRestTemplate.exchange(
+                ENDPOINT_MY_INFO,
+                HttpMethod.GET,
+                HttpEntity<Any>(headers),
+                responseType,
+            )
+
+            // assert
+            assertThat(response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+        }
+
+        @DisplayName("한 글자 이름은 '*'로 마스킹된다.")
+        @Test
+        fun masksSingleCharacterName() {
+            // arrange
+            val rawPassword = "Test1234!"
+            memberJpaRepository.save(
+                MemberModel(
+                    loginId = "testuser",
+                    password = passwordEncoder.encode(rawPassword),
+                    name = "김",
+                    birthDate = "19900101",
+                    email = "test@example.com",
+                ),
+            )
+
+            val headers = HttpHeaders().apply {
+                set(HEADER_LOGIN_ID, "testuser")
+                set(HEADER_LOGIN_PW, rawPassword)
+            }
+
+            // act
+            val responseType = object : ParameterizedTypeReference<ApiResponse<MemberV1Dto.MyInfoResponse>>() {}
+            val response = testRestTemplate.exchange(
+                ENDPOINT_MY_INFO,
+                HttpMethod.GET,
+                HttpEntity<Any>(headers),
+                responseType,
+            )
+
+            // assert
+            assertThat(response.body?.data?.name).isEqualTo("*")
         }
     }
 }
