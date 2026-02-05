@@ -10,6 +10,7 @@ import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import java.time.LocalDate
 
 class MemberModelTest {
@@ -256,15 +257,27 @@ class MemberModelTest {
     @Nested
     inner class PasswordValidation {
 
-        @DisplayName("유효한 비밀번호면, 예외가 발생하지 않는다.")
+        private val passwordEncoder = BCryptPasswordEncoder()
+
+        @DisplayName("유효한 비밀번호면, 회원이 정상적으로 생성된다.")
         @Test
-        fun doesNotThrow_whenPasswordIsValid() {
+        fun createsMember_whenPasswordIsValid() {
             // arrange
             val password = "Test1234!"
             val birthDate = LocalDate.of(1990, 1, 1)
 
-            // act & assert
-            MemberModel.validateRawPassword(password, birthDate)
+            // act
+            val member = MemberModel.create(
+                loginId = "testuser",
+                rawPassword = password,
+                passwordEncoder = passwordEncoder,
+                name = "홍길동",
+                birthDate = birthDate,
+                email = "test@example.com",
+            )
+
+            // assert
+            assertThat(passwordEncoder.matches(password, member.password)).isTrue()
         }
 
         @DisplayName("8자 미만이면, BAD_REQUEST 예외가 발생한다.")
@@ -273,7 +286,14 @@ class MemberModelTest {
         fun throwsBadRequest_whenPasswordIsTooShort(password: String) {
             // arrange & act
             val exception = assertThrows<CoreException> {
-                MemberModel.validateRawPassword(password, LocalDate.of(1990, 1, 1))
+                MemberModel.create(
+                    loginId = "testuser",
+                    rawPassword = password,
+                    passwordEncoder = passwordEncoder,
+                    name = "홍길동",
+                    birthDate = LocalDate.of(1990, 1, 1),
+                    email = "test@example.com",
+                )
             }
 
             // assert
@@ -288,7 +308,14 @@ class MemberModelTest {
 
             // act
             val exception = assertThrows<CoreException> {
-                MemberModel.validateRawPassword(password, LocalDate.of(1990, 1, 1))
+                MemberModel.create(
+                    loginId = "testuser",
+                    rawPassword = password,
+                    passwordEncoder = passwordEncoder,
+                    name = "홍길동",
+                    birthDate = LocalDate.of(1990, 1, 1),
+                    email = "test@example.com",
+                )
             }
 
             // assert
@@ -301,7 +328,14 @@ class MemberModelTest {
         fun throwsBadRequest_whenPasswordContainsInvalidCharacters(password: String) {
             // arrange & act
             val exception = assertThrows<CoreException> {
-                MemberModel.validateRawPassword(password, LocalDate.of(1990, 1, 1))
+                MemberModel.create(
+                    loginId = "testuser",
+                    rawPassword = password,
+                    passwordEncoder = passwordEncoder,
+                    name = "홍길동",
+                    birthDate = LocalDate.of(1990, 1, 1),
+                    email = "test@example.com",
+                )
             }
 
             // assert
@@ -317,7 +351,14 @@ class MemberModelTest {
 
             // act
             val exception = assertThrows<CoreException> {
-                MemberModel.validateRawPassword(password, birthDate)
+                MemberModel.create(
+                    loginId = "testuser",
+                    rawPassword = password,
+                    passwordEncoder = passwordEncoder,
+                    name = "홍길동",
+                    birthDate = birthDate,
+                    email = "test@example.com",
+                )
             }
 
             // assert
@@ -329,13 +370,16 @@ class MemberModelTest {
     @Nested
     inner class ChangePassword {
 
-        @DisplayName("유효한 새 비밀번호로 변경하면, 비밀번호가 변경된다.")
+        private val passwordEncoder = BCryptPasswordEncoder()
+
+        @DisplayName("유효한 새 비밀번호로 변경하면, 비밀번호가 암호화되어 변경된다.")
         @Test
         fun changesPassword_whenNewPasswordIsValid() {
             // arrange
-            val member = MemberModel(
+            val member = MemberModel.create(
                 loginId = "testuser",
-                password = "OldPass123!",
+                rawPassword = "OldPass123!",
+                passwordEncoder = passwordEncoder,
                 name = "홍길동",
                 birthDate = LocalDate.of(1990, 1, 1),
                 email = "test@example.com",
@@ -343,10 +387,32 @@ class MemberModelTest {
             val newPassword = "NewPass456!"
 
             // act
-            member.changePassword(newPassword)
+            member.changePassword(newPassword, passwordEncoder)
 
             // assert
-            assertThat(member.password).isEqualTo(newPassword)
+            assertThat(passwordEncoder.matches(newPassword, member.password)).isTrue()
+        }
+
+        @DisplayName("생년월일이 포함된 비밀번호로 변경하면, BAD_REQUEST 예외가 발생한다.")
+        @Test
+        fun throwsBadRequest_whenNewPasswordContainsBirthDate() {
+            // arrange
+            val member = MemberModel.create(
+                loginId = "testuser",
+                rawPassword = "OldPass123!",
+                passwordEncoder = passwordEncoder,
+                name = "홍길동",
+                birthDate = LocalDate.of(1990, 1, 1),
+                email = "test@example.com",
+            )
+
+            // act
+            val exception = assertThrows<CoreException> {
+                member.changePassword("Test19900101!", passwordEncoder)
+            }
+
+            // assert
+            assertThat(exception.errorType).isEqualTo(ErrorType.BAD_REQUEST)
         }
     }
 }

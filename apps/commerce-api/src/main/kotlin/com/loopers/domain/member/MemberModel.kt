@@ -6,13 +6,14 @@ import com.loopers.support.error.ErrorType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Table
+import org.springframework.security.crypto.password.PasswordEncoder
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
 @Entity
 @Table(name = "member")
-class MemberModel(
+class MemberModel internal constructor(
     loginId: String,
     password: String,
     name: String,
@@ -47,8 +48,12 @@ class MemberModel(
         validateBirthDate(birthDate)
     }
 
-    fun changePassword(newEncodedPassword: String) {
-        this.password = newEncodedPassword
+    fun changePassword(
+        rawPassword: String,
+        passwordEncoder: PasswordEncoder,
+    ) {
+        validateRawPassword(rawPassword, this.birthDate)
+        this.password = passwordEncoder.encode(rawPassword)
     }
 
     companion object {
@@ -56,6 +61,24 @@ class MemberModel(
         private val PASSWORD_REGEX = Regex("^[A-Za-z0-9!@#\$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?]+$")
         private val LOGIN_ID_REGEX = Regex("^[A-Za-z0-9]+$")
         private val BIRTH_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd")
+
+        fun create(
+            loginId: String,
+            rawPassword: String,
+            passwordEncoder: PasswordEncoder,
+            name: String,
+            birthDate: LocalDate,
+            email: String,
+        ): MemberModel {
+            validateRawPassword(rawPassword, birthDate)
+            return MemberModel(
+                loginId = loginId,
+                password = passwordEncoder.encode(rawPassword),
+                name = name,
+                birthDate = birthDate,
+                email = email,
+            )
+        }
 
         fun parseBirthDate(birthDateString: String): LocalDate {
             if (birthDateString.isBlank()) {
@@ -76,7 +99,7 @@ class MemberModel(
             return birthDate.format(BIRTH_DATE_FORMATTER)
         }
 
-        fun validateRawPassword(password: String, birthDate: LocalDate) {
+        private fun validateRawPassword(password: String, birthDate: LocalDate) {
             if (password.length < 8) {
                 throw CoreException(ErrorType.BAD_REQUEST, "비밀번호는 8자 이상이어야 합니다.")
             }

@@ -15,11 +15,10 @@ class MemberService(
             throw CoreException(ErrorType.BAD_REQUEST, "이미 존재하는 로그인 ID입니다.")
         }
 
-        MemberModel.validateRawPassword(command.password, command.birthDate)
-
-        val member = MemberModel(
+        val member = MemberModel.create(
             loginId = command.loginId,
-            password = passwordEncoder.encode(command.password),
+            rawPassword = command.password,
+            passwordEncoder = passwordEncoder,
             name = command.name,
             birthDate = command.birthDate,
             email = command.email,
@@ -51,8 +50,6 @@ class MemberService(
             throw CoreException(ErrorType.BAD_REQUEST, "현재 비밀번호와 동일한 비밀번호로 변경할 수 없습니다.")
         }
 
-        MemberModel.validateRawPassword(command.newPassword, member.birthDate)
-
-        member.changePassword(passwordEncoder.encode(command.newPassword))
+        member.changePassword(command.newPassword, passwordEncoder)
     }
 }
