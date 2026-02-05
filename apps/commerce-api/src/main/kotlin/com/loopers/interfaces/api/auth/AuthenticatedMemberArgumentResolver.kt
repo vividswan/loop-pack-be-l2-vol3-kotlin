@@ -1,8 +1,8 @@
 package com.loopers.interfaces.api.auth
 
+import com.loopers.application.member.MemberFacade
 import com.loopers.application.member.MemberInfo
 import com.loopers.domain.member.MemberCommand
-import com.loopers.domain.member.MemberService
 import com.loopers.support.error.CoreException
 import com.loopers.support.error.ErrorType
 import org.springframework.core.MethodParameter
@@ -14,7 +14,7 @@ import org.springframework.web.method.support.ModelAndViewContainer
 
 @Component
 class AuthenticatedMemberArgumentResolver(
-    private val memberService: MemberService,
+    private val memberFacade: MemberFacade,
 ) : HandlerMethodArgumentResolver {
 
     override fun supportsParameter(parameter: MethodParameter): Boolean {
@@ -34,9 +34,7 @@ class AuthenticatedMemberArgumentResolver(
             ?: throw CoreException(ErrorType.UNAUTHORIZED, "비밀번호 헤더가 필요합니다.")
 
         val command = MemberCommand.Authenticate(loginId = loginId, password = password)
-        val member = memberService.authenticate(command)
-
-        return MemberInfo.from(member)
+        return memberFacade.authenticate(command)
     }
 
     companion object {

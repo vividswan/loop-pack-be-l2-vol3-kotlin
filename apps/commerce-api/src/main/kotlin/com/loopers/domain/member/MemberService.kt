@@ -4,14 +4,12 @@ import com.loopers.support.error.CoreException
 import com.loopers.support.error.ErrorType
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
 
 @Component
 class MemberService(
     private val memberRepository: MemberRepository,
     private val passwordEncoder: PasswordEncoder,
 ) {
-    @Transactional
     fun register(command: MemberCommand.Register): MemberModel {
         if (memberRepository.existsByLoginId(command.loginId)) {
             throw CoreException(ErrorType.BAD_REQUEST, "이미 존재하는 로그인 ID입니다.")
@@ -30,7 +28,6 @@ class MemberService(
         return memberRepository.save(member)
     }
 
-    @Transactional(readOnly = true)
     fun authenticate(command: MemberCommand.Authenticate): MemberModel {
         val member = memberRepository.findByLoginId(command.loginId)
             ?: throw CoreException(ErrorType.UNAUTHORIZED, "존재하지 않는 회원입니다.")
@@ -42,7 +39,6 @@ class MemberService(
         return member
     }
 
-    @Transactional
     fun changePassword(command: MemberCommand.ChangePassword) {
         val member = memberRepository.findById(command.memberId)
             ?: throw CoreException(ErrorType.NOT_FOUND, "존재하지 않는 회원입니다.")
