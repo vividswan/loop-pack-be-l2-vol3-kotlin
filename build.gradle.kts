@@ -55,6 +55,7 @@ subprojects {
     dependencyManagement {
         imports {
             mavenBom("org.springframework.cloud:spring-cloud-dependencies:${project.properties["springCloudDependenciesVersion"]}")
+            mavenBom("org.testcontainers:testcontainers-bom:${project.properties["testcontainersVersion"]}")
         }
     }
 
