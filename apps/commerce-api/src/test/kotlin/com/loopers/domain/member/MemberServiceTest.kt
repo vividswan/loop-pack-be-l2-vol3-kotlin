@@ -221,4 +221,154 @@ class MemberServiceTest {
             assertThat(exception.errorType).isEqualTo(ErrorType.UNAUTHORIZED)
         }
     }
+
+    @DisplayName("비밀번호 변경 시,")
+    @Nested
+    inner class ChangePassword {
+
+        @DisplayName("유효한 정보로 변경하면, 새 비밀번호가 암호화되어 저장된다.")
+        @Test
+        fun encryptsNewPassword_whenValidInfoIsProvided() {
+            // arrange
+            val oldPassword = "OldPass123!"
+            val newPassword = "NewPass456!"
+            val encodedOldPassword = passwordEncoder.encode(oldPassword)
+            val member = MemberModel(
+                loginId = "testuser",
+                password = encodedOldPassword,
+                name = "홍길동",
+                birthDate = "19900101",
+                email = "test@example.com",
+            )
+
+            val command = MemberCommand.ChangePassword(
+                loginId = member.loginId,
+                currentPassword = oldPassword,
+                newPassword = newPassword,
+            )
+
+            whenever(memberRepository.findByLoginId(command.loginId)).thenReturn(member)
+
+            // act
+            memberService.changePassword(command)
+
+            // assert
+            verify(passwordEncoder).encode(newPassword)
+            assertThat(passwordEncoder.matches(newPassword, member.password)).isTrue()
+        }
+
+        @DisplayName("존재하지 않는 회원이면, UNAUTHORIZED 예외가 발생한다.")
+        @Test
+        fun throwsUnauthorized_whenMemberDoesNotExist() {
+            // arrange
+            val command = MemberCommand.ChangePassword(
+                loginId = "nonexistent",
+                currentPassword = "OldPass123!",
+                newPassword = "NewPass456!",
+            )
+
+            whenever(memberRepository.findByLoginId(command.loginId)).thenReturn(null)
+
+            // act
+            val exception = assertThrows<CoreException> {
+                memberService.changePassword(command)
+            }
+
+            // assert
+            assertThat(exception.errorType).isEqualTo(ErrorType.UNAUTHORIZED)
+        }
+
+        @DisplayName("기존 비밀번호가 일치하지 않으면, UNAUTHORIZED 예외가 발생한다.")
+        @Test
+        fun throwsUnauthorized_whenCurrentPasswordDoesNotMatch() {
+            // arrange
+            val encodedPassword = passwordEncoder.encode("CorrectPass1!")
+            val member = MemberModel(
+                loginId = "testuser",
+                password = encodedPassword,
+                name = "홍길동",
+                birthDate = "19900101",
+                email = "test@example.com",
+            )
+
+            val command = MemberCommand.ChangePassword(
+                loginId = "testuser",
+                currentPassword = "WrongPass123!",
+                newPassword = "NewPass456!",
+            )
+
+            whenever(memberRepository.findByLoginId(command.loginId)).thenReturn(member)
+
+            // act
+            val exception = assertThrows<CoreException> {
+                memberService.changePassword(command)
+            }
+
+            // assert
+            assertThat(exception.errorType).isEqualTo(ErrorType.UNAUTHORIZED)
+        }
+
+        @DisplayName("새 비밀번호가 현재 비밀번호와 같으면, BAD_REQUEST 예외가 발생한다.")
+        @Test
+        fun throwsBadRequest_whenNewPasswordIsSameAsCurrent() {
+            // arrange
+            val currentPassword = "Test1234!"
+            val encodedPassword = passwordEncoder.encode(currentPassword)
+            val member = MemberModel(
+                loginId = "testuser",
+                password = encodedPassword,
+                name = "홍길동",
+                birthDate = "19900101",
+                email = "test@example.com",
+            )
+
+            val command = MemberCommand.ChangePassword(
+                loginId = "testuser",
+                currentPassword = currentPassword,
+                newPassword = currentPassword,
+            )
+
+            whenever(memberRepository.findByLoginId(command.loginId)).thenReturn(member)
+
+            // act
+            val exception = assertThrows<CoreException> {
+                memberService.changePassword(command)
+            }
+
+            // assert
+            assertThat(exception.errorType).isEqualTo(ErrorType.BAD_REQUEST)
+        }
+
+        @DisplayName("새 비밀번호에 생년월일이 포함되면, BAD_REQUEST 예외가 발생한다.")
+        @Test
+        fun throwsBadRequest_whenNewPasswordContainsBirthDate() {
+            // arrange
+            val oldPassword = "OldPass123!"
+            val birthDate = "19900101"
+            val encodedPassword = passwordEncoder.encode(oldPassword)
+            val member = MemberModel(
+                loginId = "testuser",
+                password = encodedPassword,
+                name = "홍길동",
+                birthDate = birthDate,
+                email = "test@example.com",
+            )
+
+            val command = MemberCommand.ChangePassword(
+                loginId = "testuser",
+                currentPassword = oldPassword,
+                newPassword = "Test$birthDate!",
+            )
+
+            whenever(memberRepository.findByLoginId(command.loginId)).thenReturn(member)
+
+            // act
+            val exception = assertThrows<CoreException> {
+                memberService.changePassword(command)
+            }
+
+            // assert
+            assertThat(exception.errorType).isEqualTo(ErrorType.BAD_REQUEST)
+        }
+    }
 }
