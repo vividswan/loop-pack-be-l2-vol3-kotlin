@@ -1,8 +1,11 @@
 package com.loopers.interfaces.api.member
 
 import com.loopers.application.member.MemberFacade
+import com.loopers.application.member.MemberInfo
 import com.loopers.interfaces.api.ApiResponse
+import com.loopers.interfaces.api.auth.AuthenticatedMember
 import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -22,6 +25,14 @@ class MemberV1Controller(
     ): ApiResponse<MemberV1Dto.RegisterResponse> {
         return memberFacade.register(request.toCommand())
             .let { MemberV1Dto.RegisterResponse.from(it) }
+            .let { ApiResponse.success(it) }
+    }
+
+    @GetMapping("/me")
+    override fun getMyInfo(
+        @AuthenticatedMember memberInfo: MemberInfo,
+    ): ApiResponse<MemberV1Dto.MyInfoResponse> {
+        return MemberV1Dto.MyInfoResponse.from(memberInfo)
             .let { ApiResponse.success(it) }
     }
 }

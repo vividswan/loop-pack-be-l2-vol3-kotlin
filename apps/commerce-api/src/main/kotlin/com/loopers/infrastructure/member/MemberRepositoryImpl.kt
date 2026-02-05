@@ -16,4 +16,8 @@ class MemberRepositoryImpl(
     override fun existsByLoginId(loginId: String): Boolean {
         return memberJpaRepository.existsByLoginId(loginId)
     }
+
+    override fun findByLoginId(loginId: String): MemberModel? {
+        return memberJpaRepository.findByLoginId(loginId)
+    }
 }

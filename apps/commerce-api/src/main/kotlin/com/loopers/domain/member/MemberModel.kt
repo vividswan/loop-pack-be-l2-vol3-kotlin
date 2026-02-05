@@ -50,6 +50,7 @@ class MemberModel(
     companion object {
         private val EMAIL_REGEX = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
         private val PASSWORD_REGEX = Regex("^[A-Za-z0-9!@#\$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?]+$")
+        private val LOGIN_ID_REGEX = Regex("^[A-Za-z0-9]+$")
         private val BIRTH_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd")
 
         fun validateRawPassword(password: String, birthDate: String) {
@@ -70,6 +71,9 @@ class MemberModel(
         private fun validateLoginId(loginId: String) {
             if (loginId.isBlank()) {
                 throw CoreException(ErrorType.BAD_REQUEST, "로그인 ID는 비어있을 수 없습니다.")
+            }
+            if (!LOGIN_ID_REGEX.matches(loginId)) {
+                throw CoreException(ErrorType.BAD_REQUEST, "로그인 ID는 영문과 숫자만 허용됩니다.")
             }
         }
 

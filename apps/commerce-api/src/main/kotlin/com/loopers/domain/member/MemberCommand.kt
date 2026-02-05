@@ -8,4 +8,9 @@ class MemberCommand {
         val birthDate: String,
         val email: String,
     )
+
+    data class Authenticate(
+        val loginId: String,
+        val password: String,
+    )
 }

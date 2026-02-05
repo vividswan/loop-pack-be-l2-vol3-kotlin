@@ -29,4 +29,16 @@ class MemberService(
 
         return memberRepository.save(member)
     }
+
+    @Transactional(readOnly = true)
+    fun authenticate(command: MemberCommand.Authenticate): MemberModel {
+        val member = memberRepository.findByLoginId(command.loginId)
+            ?: throw CoreException(ErrorType.UNAUTHORIZED, "존재하지 않는 회원입니다.")
+
+        if (!passwordEncoder.matches(command.password, member.password)) {
+            throw CoreException(ErrorType.UNAUTHORIZED, "비밀번호가 일치하지 않습니다.")
+        }
+
+        return member
+    }
 }
