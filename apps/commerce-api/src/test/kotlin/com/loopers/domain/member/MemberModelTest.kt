@@ -69,6 +69,42 @@ class MemberModelTest {
             // assert
             assertThat(exception.errorType).isEqualTo(ErrorType.BAD_REQUEST)
         }
+
+        @DisplayName("영문과 숫자 외 문자가 포함되면, BAD_REQUEST 예외가 발생한다.")
+        @ParameterizedTest
+        @ValueSource(strings = ["test_user", "test-user", "test@user", "test user", "테스트유저", "test!123"])
+        fun throwsBadRequest_whenLoginIdContainsInvalidCharacters(loginId: String) {
+            // arrange & act
+            val exception = assertThrows<CoreException> {
+                MemberModel(
+                    loginId = loginId,
+                    password = "Test1234!",
+                    name = "홍길동",
+                    birthDate = "19900101",
+                    email = "test@example.com",
+                )
+            }
+
+            // assert
+            assertThat(exception.errorType).isEqualTo(ErrorType.BAD_REQUEST)
+        }
+
+        @DisplayName("영문과 숫자만 포함되면, 정상적으로 생성된다.")
+        @ParameterizedTest
+        @ValueSource(strings = ["testuser", "TestUser123", "USER123", "abc123"])
+        fun createsMember_whenLoginIdContainsOnlyAlphanumeric(loginId: String) {
+            // act
+            val member = MemberModel(
+                loginId = loginId,
+                password = "Test1234!",
+                name = "홍길동",
+                birthDate = "19900101",
+                email = "test@example.com",
+            )
+
+            // assert
+            assertThat(member.loginId).isEqualTo(loginId)
+        }
     }
 
     @DisplayName("이름 검증 시,")
