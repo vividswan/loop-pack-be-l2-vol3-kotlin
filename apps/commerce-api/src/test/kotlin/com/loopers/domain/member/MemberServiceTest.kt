@@ -138,4 +138,87 @@ class MemberServiceTest {
             assertThat(passwordEncoder.matches(rawPassword, savedMember.password)).isTrue()
         }
     }
+
+    @DisplayName("인증 시,")
+    @Nested
+    inner class Authenticate {
+
+        @DisplayName("유효한 정보로 인증하면, 회원 정보가 반환된다.")
+        @Test
+        fun returnsMember_whenValidCredentialsAreProvided() {
+            // arrange
+            val rawPassword = "Test1234!"
+            val encodedPassword = passwordEncoder.encode(rawPassword)
+            val member = MemberModel(
+                loginId = "testuser",
+                password = encodedPassword,
+                name = "홍길동",
+                birthDate = "19900101",
+                email = "test@example.com",
+            )
+
+            val command = MemberCommand.Authenticate(
+                loginId = "testuser",
+                password = rawPassword,
+            )
+
+            whenever(memberRepository.findByLoginId(command.loginId)).thenReturn(member)
+
+            // act
+            val result = memberService.authenticate(command)
+
+            // assert
+            assertThat(result.loginId).isEqualTo(member.loginId)
+            assertThat(result.name).isEqualTo(member.name)
+        }
+
+        @DisplayName("존재하지 않는 로그인 ID면, UNAUTHORIZED 예외가 발생한다.")
+        @Test
+        fun throwsUnauthorized_whenLoginIdDoesNotExist() {
+            // arrange
+            val command = MemberCommand.Authenticate(
+                loginId = "nonexistent",
+                password = "Test1234!",
+            )
+
+            whenever(memberRepository.findByLoginId(command.loginId)).thenReturn(null)
+
+            // act
+            val exception = assertThrows<CoreException> {
+                memberService.authenticate(command)
+            }
+
+            // assert
+            assertThat(exception.errorType).isEqualTo(ErrorType.UNAUTHORIZED)
+        }
+
+        @DisplayName("비밀번호가 일치하지 않으면, UNAUTHORIZED 예외가 발생한다.")
+        @Test
+        fun throwsUnauthorized_whenPasswordDoesNotMatch() {
+            // arrange
+            val encodedPassword = passwordEncoder.encode("CorrectPass1!")
+            val member = MemberModel(
+                loginId = "testuser",
+                password = encodedPassword,
+                name = "홍길동",
+                birthDate = "19900101",
+                email = "test@example.com",
+            )
+
+            val command = MemberCommand.Authenticate(
+                loginId = "testuser",
+                password = "WrongPass123!",
+            )
+
+            whenever(memberRepository.findByLoginId(command.loginId)).thenReturn(member)
+
+            // act
+            val exception = assertThrows<CoreException> {
+                memberService.authenticate(command)
+            }
+
+            // assert
+            assertThat(exception.errorType).isEqualTo(ErrorType.UNAUTHORIZED)
+        }
+    }
 }
