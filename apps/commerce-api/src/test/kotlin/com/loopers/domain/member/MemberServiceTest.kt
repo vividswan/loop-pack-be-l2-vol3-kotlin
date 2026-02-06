@@ -44,7 +44,7 @@ class MemberServiceTest {
                 loginId = "testuser",
                 password = "Test1234!",
                 name = "홍길동",
-                birthDate = LocalDate.of(1990, 1, 1),
+                birthDate = "19900101",
                 email = "test@example.com",
             )
 
@@ -70,7 +70,7 @@ class MemberServiceTest {
                 loginId = "testuser",
                 password = "Test1234!",
                 name = "홍길동",
-                birthDate = LocalDate.of(1990, 1, 1),
+                birthDate = "19900101",
                 email = "test@example.com",
             )
 
@@ -94,7 +94,7 @@ class MemberServiceTest {
                 loginId = "existinguser",
                 password = "Test1234!",
                 name = "홍길동",
-                birthDate = LocalDate.of(1990, 1, 1),
+                birthDate = "19900101",
                 email = "test@example.com",
             )
 
@@ -118,7 +118,7 @@ class MemberServiceTest {
                 loginId = "testuser",
                 password = rawPassword,
                 name = "홍길동",
-                birthDate = LocalDate.of(1990, 1, 1),
+                birthDate = "19900101",
                 email = "test@example.com",
             )
 

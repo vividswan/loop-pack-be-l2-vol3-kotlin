@@ -17,7 +17,7 @@ class MemberV1Dto {
                 loginId = loginId,
                 password = password,
                 name = name,
-                birthDate = MemberModel.parseBirthDate(birthDate),
+                birthDate = birthDate,
                 email = email,
             )
         }

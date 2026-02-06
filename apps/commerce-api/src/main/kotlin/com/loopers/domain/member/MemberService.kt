@@ -20,7 +20,7 @@ class MemberService(
             rawPassword = command.password,
             passwordEncoder = passwordEncoder,
             name = command.name,
-            birthDate = command.birthDate,
+            birthDate = MemberModel.parseBirthDate(command.birthDate),
             email = command.email,
         )
 
