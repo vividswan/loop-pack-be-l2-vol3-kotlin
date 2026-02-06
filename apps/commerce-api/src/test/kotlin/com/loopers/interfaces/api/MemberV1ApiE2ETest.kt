@@ -16,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -214,6 +215,56 @@ class MemberV1ApiE2ETest @Autowired constructor(
             // assert
             assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
         }
+
+        @DisplayName("비밀번호가 16자 초과면, 400 Bad Request 응답을 받는다.")
+        @Test
+        fun returnsBadRequest_whenPasswordIsTooLong() {
+            // arrange
+            val request = MemberV1Dto.RegisterRequest(
+                loginId = "testuser",
+                password = "Test1234!Test1234!",
+                name = "홍길동",
+                birthDate = "19900101",
+                email = "test@example.com",
+            )
+
+            // act
+            val responseType = object : ParameterizedTypeReference<ApiResponse<MemberV1Dto.RegisterResponse>>() {}
+            val response = testRestTemplate.exchange(
+                ENDPOINT_REGISTER,
+                HttpMethod.POST,
+                HttpEntity(request),
+                responseType,
+            )
+
+            // assert
+            assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+        }
+
+        @DisplayName("로그인 ID에 특수문자가 포함되면, 400 Bad Request 응답을 받는다.")
+        @Test
+        fun returnsBadRequest_whenLoginIdContainsSpecialCharacters() {
+            // arrange
+            val request = MemberV1Dto.RegisterRequest(
+                loginId = "test_user!",
+                password = "Test1234!",
+                name = "홍길동",
+                birthDate = "19900101",
+                email = "test@example.com",
+            )
+
+            // act
+            val responseType = object : ParameterizedTypeReference<ApiResponse<MemberV1Dto.RegisterResponse>>() {}
+            val response = testRestTemplate.exchange(
+                ENDPOINT_REGISTER,
+                HttpMethod.POST,
+                HttpEntity(request),
+                responseType,
+            )
+
+            // assert
+            assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+        }
     }
 
     @DisplayName("GET /api/v1/members/me")
@@ -335,6 +386,48 @@ class MemberV1ApiE2ETest @Autowired constructor(
 
             // assert
             assertThat(response.body?.data?.name).isEqualTo("*")
+        }
+
+        @DisplayName("로그인 ID 헤더가 없으면, 401 Unauthorized 응답을 받는다.")
+        @Test
+        fun returnsUnauthorized_whenLoginIdHeaderIsMissing() {
+            // arrange
+            val headers = HttpHeaders().apply {
+                set(MemberTestFixture.HEADER_LOGIN_PW, "Test1234!")
+            }
+
+            // act
+            val responseType = object : ParameterizedTypeReference<ApiResponse<MemberV1Dto.MyInfoResponse>>() {}
+            val response = testRestTemplate.exchange(
+                ENDPOINT_MY_INFO,
+                HttpMethod.GET,
+                HttpEntity<Any>(headers),
+                responseType,
+            )
+
+            // assert
+            assertThat(response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+        }
+
+        @DisplayName("비밀번호 헤더가 없으면, 401 Unauthorized 응답을 받는다.")
+        @Test
+        fun returnsUnauthorized_whenPasswordHeaderIsMissing() {
+            // arrange
+            val headers = HttpHeaders().apply {
+                set(MemberTestFixture.HEADER_LOGIN_ID, "testuser")
+            }
+
+            // act
+            val responseType = object : ParameterizedTypeReference<ApiResponse<MemberV1Dto.MyInfoResponse>>() {}
+            val response = testRestTemplate.exchange(
+                ENDPOINT_MY_INFO,
+                HttpMethod.GET,
+                HttpEntity<Any>(headers),
+                responseType,
+            )
+
+            // assert
+            assertThat(response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
         }
     }
 
