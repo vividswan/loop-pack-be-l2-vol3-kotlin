@@ -30,9 +30,9 @@ class AuthenticatedMemberArgumentResolver(
         binderFactory: WebDataBinderFactory?,
     ): MemberInfo {
         val loginId = webRequest.getHeader(HEADER_LOGIN_ID)
-            ?: throw CoreException(ErrorType.UNAUTHORIZED, MemberErrorCode.AUTH_HEADER_LOGIN_ID_MISSING.message)
+            ?: throw CoreException(ErrorType.UNAUTHORIZED, MemberErrorCode.AUTH_HEADER_LOGIN_ID_MISSING)
         val password = webRequest.getHeader(HEADER_LOGIN_PW)
-            ?: throw CoreException(ErrorType.UNAUTHORIZED, MemberErrorCode.AUTH_HEADER_PASSWORD_MISSING.message)
+            ?: throw CoreException(ErrorType.UNAUTHORIZED, MemberErrorCode.AUTH_HEADER_PASSWORD_MISSING)
 
         val command = MemberCommand.Authenticate(loginId = loginId, password = password)
         return memberFacade.authenticate(command)

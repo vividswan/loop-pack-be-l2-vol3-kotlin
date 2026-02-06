@@ -12,7 +12,7 @@ class MemberService(
 ) {
     fun register(command: MemberCommand.Register): MemberModel {
         if (memberRepository.existsByLoginId(command.loginId)) {
-            throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.LOGIN_ID_DUPLICATE.message)
+            throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.LOGIN_ID_DUPLICATE)
         }
 
         val member = MemberModel.create(
@@ -29,10 +29,10 @@ class MemberService(
 
     fun authenticate(command: MemberCommand.Authenticate): MemberModel {
         val member = memberRepository.findByLoginId(command.loginId)
-            ?: throw CoreException(ErrorType.UNAUTHORIZED, MemberErrorCode.MEMBER_NOT_FOUND.message)
+            ?: throw CoreException(ErrorType.UNAUTHORIZED, MemberErrorCode.MEMBER_NOT_FOUND)
 
         if (!passwordEncoder.matches(command.password, member.password)) {
-            throw CoreException(ErrorType.UNAUTHORIZED, MemberErrorCode.PASSWORD_MISMATCH.message)
+            throw CoreException(ErrorType.UNAUTHORIZED, MemberErrorCode.PASSWORD_MISMATCH)
         }
 
         return member
@@ -40,14 +40,14 @@ class MemberService(
 
     fun changePassword(command: MemberCommand.ChangePassword) {
         val member = memberRepository.findById(command.memberId)
-            ?: throw CoreException(ErrorType.NOT_FOUND, MemberErrorCode.MEMBER_NOT_FOUND.message)
+            ?: throw CoreException(ErrorType.NOT_FOUND, MemberErrorCode.MEMBER_NOT_FOUND)
 
         if (!passwordEncoder.matches(command.currentPassword, member.password)) {
-            throw CoreException(ErrorType.UNAUTHORIZED, MemberErrorCode.PASSWORD_MISMATCH.message)
+            throw CoreException(ErrorType.UNAUTHORIZED, MemberErrorCode.PASSWORD_MISMATCH)
         }
 
         if (command.currentPassword == command.newPassword) {
-            throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.PASSWORD_SAME_AS_CURRENT.message)
+            throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.PASSWORD_SAME_AS_CURRENT)
         }
 
         member.changePassword(command.newPassword, passwordEncoder)

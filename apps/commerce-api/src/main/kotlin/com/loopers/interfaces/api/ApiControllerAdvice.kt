@@ -26,7 +26,7 @@ class ApiControllerAdvice {
     @ExceptionHandler
     fun handle(e: CoreException): ResponseEntity<ApiResponse<*>> {
         log.warn("CoreException : {}", e.customMessage ?: e.message, e)
-        return failureResponse(errorType = e.errorType, errorMessage = e.customMessage)
+        return failureResponse(errorType = e.errorType, errorCode = e.errorCode, errorMessage = e.customMessage)
     }
 
     @ExceptionHandler
@@ -111,9 +111,13 @@ class ApiControllerAdvice {
         return failureResponse(errorType = errorType)
     }
 
-    private fun failureResponse(errorType: ErrorType, errorMessage: String? = null): ResponseEntity<ApiResponse<*>> =
+    private fun failureResponse(
+        errorType: ErrorType,
+        errorCode: String? = null,
+        errorMessage: String? = null,
+    ): ResponseEntity<ApiResponse<*>> =
         ResponseEntity(
-            ApiResponse.fail(errorCode = errorType.code, errorMessage = errorMessage ?: errorType.message),
+            ApiResponse.fail(errorCode = errorCode ?: errorType.code, errorMessage = errorMessage ?: errorType.message),
             errorType.status,
         )
 }

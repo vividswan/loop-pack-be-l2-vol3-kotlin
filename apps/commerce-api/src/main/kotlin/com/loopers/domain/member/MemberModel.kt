@@ -85,16 +85,16 @@ class MemberModel internal constructor(
 
         fun parseBirthDate(birthDateString: String): LocalDate {
             if (birthDateString.isBlank()) {
-                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.BIRTH_DATE_EMPTY.message)
+                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.BIRTH_DATE_EMPTY)
             }
             try {
                 val date = LocalDate.parse(birthDateString, BIRTH_DATE_FORMATTER)
                 if (date.isAfter(LocalDate.now())) {
-                    throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.BIRTH_DATE_FUTURE.message)
+                    throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.BIRTH_DATE_FUTURE)
                 }
                 return date
             } catch (e: DateTimeParseException) {
-                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.BIRTH_DATE_INVALID_FORMAT.message)
+                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.BIRTH_DATE_INVALID_FORMAT)
             }
         }
 
@@ -104,43 +104,42 @@ class MemberModel internal constructor(
 
         private fun validateRawPassword(password: String, birthDate: LocalDate) {
             if (password.length < 8) {
-                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.PASSWORD_TOO_SHORT.message)
+                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.PASSWORD_TOO_SHORT)
             }
             if (password.length > 16) {
-                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.PASSWORD_TOO_LONG.message)
+                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.PASSWORD_TOO_LONG)
             }
             if (!PASSWORD_REGEX.matches(password)) {
-                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.PASSWORD_INVALID_FORMAT.message)
+                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.PASSWORD_INVALID_FORMAT)
             }
             val birthDateString = formatBirthDate(birthDate)
             if (password.contains(birthDateString)) {
-                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.PASSWORD_CONTAINS_BIRTH_DATE.message)
+                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.PASSWORD_CONTAINS_BIRTH_DATE)
             }
         }
 
         private fun validateLoginId(loginId: String) {
             if (loginId.isBlank()) {
-                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.LOGIN_ID_EMPTY.message)
+                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.LOGIN_ID_EMPTY)
             }
             if (!LOGIN_ID_REGEX.matches(loginId)) {
-                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.LOGIN_ID_INVALID_FORMAT.message)
+                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.LOGIN_ID_INVALID_FORMAT)
             }
         }
 
         private fun validateName(name: String) {
             if (name.isBlank()) {
-                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.NAME_EMPTY.message)
+                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.NAME_EMPTY)
             }
         }
 
         private fun validateEmail(email: String) {
             if (email.isBlank()) {
-                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.EMAIL_EMPTY.message)
+                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.EMAIL_EMPTY)
             }
             if (!EMAIL_REGEX.matches(email)) {
-                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.EMAIL_INVALID_FORMAT.message)
+                throw CoreException(ErrorType.BAD_REQUEST, MemberErrorCode.EMAIL_INVALID_FORMAT)
             }
         }
-
     }
 }

@@ -1,6 +1,8 @@
 package com.loopers.domain.member
 
-enum class MemberErrorCode(val code: String, val message: String) {
+import com.loopers.support.error.ErrorCode
+
+enum class MemberErrorCode(override val code: String, override val message: String) : ErrorCode {
     // 로그인 ID 관련
     LOGIN_ID_EMPTY("member.login-id.empty", "로그인 ID는 비어있을 수 없습니다."),
     LOGIN_ID_INVALID_FORMAT("member.login-id.invalid-format", "로그인 ID는 영문과 숫자만 허용됩니다."),
