@@ -1,6 +1,7 @@
 package com.loopers.interfaces.api
 
 import com.loopers.domain.member.MemberModel
+import com.loopers.fixtures.MemberTestFixture
 import com.loopers.infrastructure.member.MemberJpaRepository
 import com.loopers.interfaces.api.member.MemberV1Dto
 import com.loopers.utils.DatabaseCleanUp
@@ -15,7 +16,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -32,8 +32,6 @@ class MemberV1ApiE2ETest @Autowired constructor(
         private const val ENDPOINT_REGISTER = "/api/v1/members/register"
         private const val ENDPOINT_MY_INFO = "/api/v1/members/me"
         private const val ENDPOINT_CHANGE_PASSWORD = "/api/v1/members/password"
-        private const val HEADER_LOGIN_ID = "X-Loopers-LoginId"
-        private const val HEADER_LOGIN_PW = "X-Loopers-LoginPw"
     }
 
     @AfterEach
@@ -238,10 +236,7 @@ class MemberV1ApiE2ETest @Autowired constructor(
                 ),
             )
 
-            val headers = HttpHeaders().apply {
-                set(HEADER_LOGIN_ID, member.loginId)
-                set(HEADER_LOGIN_PW, rawPassword)
-            }
+            val headers = MemberTestFixture.createAuthHeaders(member.loginId, rawPassword)
 
             // act
             val responseType = object : ParameterizedTypeReference<ApiResponse<MemberV1Dto.MyInfoResponse>>() {}
@@ -266,10 +261,7 @@ class MemberV1ApiE2ETest @Autowired constructor(
         @Test
         fun returnsUnauthorized_whenLoginIdDoesNotExist() {
             // arrange
-            val headers = HttpHeaders().apply {
-                set(HEADER_LOGIN_ID, "nonexistent")
-                set(HEADER_LOGIN_PW, "Test1234!")
-            }
+            val headers = MemberTestFixture.createAuthHeaders("nonexistent", "Test1234!")
 
             // act
             val responseType = object : ParameterizedTypeReference<ApiResponse<MemberV1Dto.MyInfoResponse>>() {}
@@ -299,10 +291,7 @@ class MemberV1ApiE2ETest @Autowired constructor(
                 ),
             )
 
-            val headers = HttpHeaders().apply {
-                set(HEADER_LOGIN_ID, "testuser")
-                set(HEADER_LOGIN_PW, "WrongPass123!")
-            }
+            val headers = MemberTestFixture.createAuthHeaders("testuser", "WrongPass123!")
 
             // act
             val responseType = object : ParameterizedTypeReference<ApiResponse<MemberV1Dto.MyInfoResponse>>() {}
@@ -333,10 +322,7 @@ class MemberV1ApiE2ETest @Autowired constructor(
                 ),
             )
 
-            val headers = HttpHeaders().apply {
-                set(HEADER_LOGIN_ID, "testuser")
-                set(HEADER_LOGIN_PW, rawPassword)
-            }
+            val headers = MemberTestFixture.createAuthHeaders("testuser", rawPassword)
 
             // act
             val responseType = object : ParameterizedTypeReference<ApiResponse<MemberV1Dto.MyInfoResponse>>() {}
@@ -373,10 +359,7 @@ class MemberV1ApiE2ETest @Autowired constructor(
                 ),
             )
 
-            val headers = HttpHeaders().apply {
-                set(HEADER_LOGIN_ID, "testuser")
-                set(HEADER_LOGIN_PW, oldPassword)
-            }
+            val headers = MemberTestFixture.createAuthHeaders("testuser", oldPassword)
 
             val request = MemberV1Dto.ChangePasswordRequest(
                 currentPassword = oldPassword,
@@ -413,10 +396,7 @@ class MemberV1ApiE2ETest @Autowired constructor(
                 ),
             )
 
-            val changeHeaders = HttpHeaders().apply {
-                set(HEADER_LOGIN_ID, "testuser")
-                set(HEADER_LOGIN_PW, oldPassword)
-            }
+            val changeHeaders = MemberTestFixture.createAuthHeaders("testuser", oldPassword)
 
             val changeRequest = MemberV1Dto.ChangePasswordRequest(
                 currentPassword = oldPassword,
@@ -431,10 +411,7 @@ class MemberV1ApiE2ETest @Autowired constructor(
             )
 
             // act
-            val newHeaders = HttpHeaders().apply {
-                set(HEADER_LOGIN_ID, "testuser")
-                set(HEADER_LOGIN_PW, newPassword)
-            }
+            val newHeaders = MemberTestFixture.createAuthHeaders("testuser", newPassword)
 
             val responseType = object : ParameterizedTypeReference<ApiResponse<MemberV1Dto.MyInfoResponse>>() {}
             val response = testRestTemplate.exchange(
@@ -465,10 +442,7 @@ class MemberV1ApiE2ETest @Autowired constructor(
                 ),
             )
 
-            val headers = HttpHeaders().apply {
-                set(HEADER_LOGIN_ID, "testuser")
-                set(HEADER_LOGIN_PW, correctPassword)
-            }
+            val headers = MemberTestFixture.createAuthHeaders("testuser", correctPassword)
 
             val request = MemberV1Dto.ChangePasswordRequest(
                 currentPassword = "WrongPass123!",
@@ -504,10 +478,7 @@ class MemberV1ApiE2ETest @Autowired constructor(
                 ),
             )
 
-            val headers = HttpHeaders().apply {
-                set(HEADER_LOGIN_ID, "testuser")
-                set(HEADER_LOGIN_PW, currentPassword)
-            }
+            val headers = MemberTestFixture.createAuthHeaders("testuser", currentPassword)
 
             val request = MemberV1Dto.ChangePasswordRequest(
                 currentPassword = currentPassword,
@@ -544,10 +515,7 @@ class MemberV1ApiE2ETest @Autowired constructor(
                 ),
             )
 
-            val headers = HttpHeaders().apply {
-                set(HEADER_LOGIN_ID, "testuser")
-                set(HEADER_LOGIN_PW, currentPassword)
-            }
+            val headers = MemberTestFixture.createAuthHeaders("testuser", currentPassword)
 
             val request = MemberV1Dto.ChangePasswordRequest(
                 currentPassword = currentPassword,
@@ -583,10 +551,7 @@ class MemberV1ApiE2ETest @Autowired constructor(
                 ),
             )
 
-            val headers = HttpHeaders().apply {
-                set(HEADER_LOGIN_ID, "testuser")
-                set(HEADER_LOGIN_PW, currentPassword)
-            }
+            val headers = MemberTestFixture.createAuthHeaders("testuser", currentPassword)
 
             val request = MemberV1Dto.ChangePasswordRequest(
                 currentPassword = currentPassword,
