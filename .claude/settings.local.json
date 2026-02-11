@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(./gradlew :apps:commerce-api:test:*)",
+      "Bash(./gradlew:*)",
+      "Bash(java:*)",
+      "Bash(/usr/libexec/java_home:*)",
+      "Bash(JAVA_HOME=/Users/user/Library/Java/JavaVirtualMachines/openjdk-21.0.2/Contents/Home ./gradlew:*)",
+      "Bash(docker info:*)",
+      "Bash(echo:*)",
+      "Bash(ls:*)",
+      "Bash(curl:*)",
+      "Bash(DOCKER_HOST=unix:///Users/user/Library/Containers/com.docker.docker/Data/docker.raw.sock JAVA_HOME=/Users/user/Library/Java/JavaVirtualMachines/openjdk-21.0.2/Contents/Home ./gradlew :apps:commerce-api:test --tests \"com.loopers.interfaces.api.MemberV1ApiE2ETest\")",
+      "Bash(export DOCKER_HOST=\"unix:///Users/user/Library/Containers/com.docker.docker/Data/docker.raw.sock\")",
+      "Bash(export JAVA_HOME=\"/Users/user/Library/Java/JavaVirtualMachines/openjdk-21.0.2/Contents/Home\")",
+      "Bash(TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/Users/user/Library/Containers/com.docker.docker/Data/docker.raw.sock DOCKER_HOST=unix:///Users/user/Library/Containers/com.docker.docker/Data/docker.raw.sock JAVA_HOME=/Users/user/Library/Java/JavaVirtualMachines/openjdk-21.0.2/Contents/Home ./gradlew :apps:commerce-api:test --tests \"com.loopers.interfaces.api.MemberV1ApiE2ETest\")",
+      "Bash(export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=\"/Users/user/Library/Containers/com.docker.docker/Data/docker.raw.sock\")",
+      "Bash(TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/Users/user/Library/Containers/com.docker.docker/Data/docker.raw.sock DOCKER_HOST=unix:///Users/user/Library/Containers/com.docker.docker/Data/docker.raw.sock JAVA_HOME=/Users/user/Library/Java/JavaVirtualMachines/openjdk-21.0.2/Contents/Home ./gradlew:*)",
+      "Bash(git checkout:*)",
+      "Bash(docker version:*)",
+      "Bash(docker context:*)",
+      "Bash(docker context inspect:*)",
+      "Bash(osascript:*)",
+      "Bash(open:*)",
+      "Bash(for i in {1..10})",
+      "Bash(do echo \"Attempt $i...\")",
+      "Bash(if docker version)",
+      "Bash(then echo \"Docker ready!\")",
+      "Bash(break)",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(colima status:*)"
+    ]
+  }
+}
