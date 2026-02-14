@@ -42,35 +42,37 @@ sequenceDiagram
     participant Stock as Stock
     participant OS as OrderService
 
-    Client->>Controller: POST /api/v1/orders
-    Controller->>Facade: createOrder(userId, items)
+    Client->>+Controller: POST /api/v1/orders
+    Controller->>+Facade: createOrder(userId, items)
 
     rect rgb(240, 248, 255)
         note right of Facade: @Transactional — 단일 트랜잭션 (B4)
 
-        Facade->>PS: getActiveProducts(productIds)
+        Facade->>+PS: getActiveProducts(productIds)
         break 상품 미존재 또는 삭제됨
             PS-->>Facade: throw NOT_FOUND
         end
-        PS-->>Facade: products
+        PS-->>-Facade: products
 
         loop 각 주문 항목
-            Facade->>SS: decrease(productId, quantity)
+            Facade->>+SS: decrease(productId, quantity)
             note right of SS: SELECT FOR UPDATE (R2)
-            SS->>Stock: decrease(quantity)
+            SS->>+Stock: decrease(quantity)
             note right of Stock: quantity -= amount<br/>guard: quantity ≥ 0
+            Stock-->>-SS: ok
             break 재고 부족
                 SS-->>Facade: throw CONFLICT
             end
+            SS-->>-Facade: ok
         end
 
-        Facade->>OS: create(userId, products, items)
+        Facade->>+OS: create(userId, products, items)
         note right of OS: OrderItem 생성 시 스냅샷 캡처 (B1)<br/>productName, productPrice, brandName<br/>totalAmount = Σ(price × quantity)
-        OS-->>Facade: Order (status=CREATED)
+        OS-->>-Facade: Order (status=CREATED)
     end
 
-    Facade-->>Controller: OrderInfo
-    Controller-->>Client: 201 Created
+    Facade-->>-Controller: OrderInfo
+    Controller-->>-Client: 201 Created
 ```
 
 ### 설계 포인트
@@ -106,34 +108,34 @@ sequenceDiagram
     participant PS as ProductService
     participant LS as LikeService
 
-    Client->>Controller: POST /api/v1/products/{productId}/likes
-    Controller->>Facade: addLike(userId, productId)
+    Client->>+Controller: POST /api/v1/products/{productId}/likes
+    Controller->>+Facade: addLike(userId, productId)
 
     rect rgb(240, 248, 255)
         note right of Facade: @Transactional — addLike + likeCount 갱신 원자성 보장 (R3)
 
-        Facade->>PS: getActiveProduct(productId)
+        Facade->>+PS: getActiveProduct(productId)
         break 상품 미존재 또는 삭제됨
             PS-->>Facade: throw NOT_FOUND
         end
-        PS-->>Facade: Product
+        PS-->>-Facade: Product
 
-        Facade->>LS: addLike(userId, productId)
+        Facade->>+LS: addLike(userId, productId)
         note right of LS: (userId, productId) unique 체크 (B5)
 
         alt 신규 좋아요
-            LS-->>Facade: Like (created=true)
-            Facade->>PS: increaseLikeCount(productId)
+            LS-->>-Facade: Like (created=true)
+            Facade->>+PS: increaseLikeCount(productId)
             note right of PS: Product.increaseLikeCount()<br/>likeCount++ 비정규화 갱신 (P12)
-            PS-->>Facade: ok
+            PS-->>-Facade: ok
         else 이미 좋아요 존재 — 멱등 처리 (P1)
             LS-->>Facade: Like (created=false)
             note right of Facade: likeCount 갱신 생략
         end
     end
 
-    Facade-->>Controller: LikeInfo
-    Controller-->>Client: 200 OK
+    Facade-->>-Controller: LikeInfo
+    Controller-->>-Client: 200 OK
 ```
 
 ### 설계 포인트
@@ -168,36 +170,36 @@ sequenceDiagram
     participant PS as ProductService
     participant LS as LikeService
 
-    Admin->>Controller: DELETE /api-admin/v1/brands/{brandId}
-    Controller->>Facade: deleteBrand(brandId)
+    Admin->>+Controller: DELETE /api-admin/v1/brands/{brandId}
+    Controller->>+Facade: deleteBrand(brandId)
 
     rect rgb(240, 248, 255)
         note right of Facade: @Transactional — 단일 트랜잭션
 
-        Facade->>BS: getActiveBrand(brandId)
+        Facade->>+BS: getActiveBrand(brandId)
         break 브랜드 미존재 또는 이미 삭제됨
             BS-->>Facade: throw NOT_FOUND
         end
-        BS-->>Facade: Brand
+        BS-->>-Facade: Brand
 
-        Facade->>PS: getProductIdsByBrandId(brandId)
-        PS-->>Facade: productIds
+        Facade->>+PS: getProductIdsByBrandId(brandId)
+        PS-->>-Facade: productIds
 
-        Facade->>LS: softDeleteByProductIds(productIds)
+        Facade->>+LS: softDeleteByProductIds(productIds)
         note right of LS: Like.delete() — deletedAt 마킹 (P7)<br/>BaseEntity.delete() 활용
-        LS-->>Facade: ok
+        LS-->>-Facade: ok
 
-        Facade->>PS: softDeleteByBrandId(brandId)
+        Facade->>+PS: softDeleteByBrandId(brandId)
         note right of PS: Product.delete() — deletedAt 마킹<br/>BaseEntity.delete() 활용
-        PS-->>Facade: ok
+        PS-->>-Facade: ok
 
-        Facade->>BS: softDelete(brandId)
+        Facade->>+BS: softDelete(brandId)
         note right of BS: Brand.delete() — deletedAt 마킹<br/>BaseEntity.delete() 활용
-        BS-->>Facade: ok
+        BS-->>-Facade: ok
     end
 
-    Facade-->>Controller: void
-    Controller-->>Admin: 200 OK
+    Facade-->>-Controller: void
+    Controller-->>-Admin: 200 OK
 ```
 
 ### 설계 포인트
