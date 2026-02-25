@@ -46,6 +46,11 @@ class ProductModel internal constructor(
         validateStock(stock)
     }
 
+    override fun guard() {
+        validateName(name)
+        validatePrice(price)
+    }
+
     fun decreaseStock(quantity: Int) {
         if (this.stock < quantity) {
             throw CoreException(ErrorType.BAD_REQUEST, ProductErrorCode.STOCK_NOT_ENOUGH)

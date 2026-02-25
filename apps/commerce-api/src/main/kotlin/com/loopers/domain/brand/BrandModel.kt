@@ -26,6 +26,10 @@ class BrandModel internal constructor(
         validateName(name)
     }
 
+    override fun guard() {
+        validateName(name)
+    }
+
     companion object {
         fun create(
             name: String,
