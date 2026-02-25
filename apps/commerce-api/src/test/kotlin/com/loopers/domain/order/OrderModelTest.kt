@@ -125,5 +125,17 @@ class OrderModelTest {
             // assert
             assertThat(exception.errorType).isEqualTo(ErrorType.BAD_REQUEST)
         }
+
+        @DisplayName("가격이 음수이면, BAD_REQUEST 예외가 발생한다.")
+        @Test
+        fun throwsBadRequest_whenPriceIsNegative() {
+            // arrange & act
+            val exception = assertThrows<CoreException> {
+                OrderItemModel.create(productId = 1L, productName = "운동화", quantity = 1, price = -1L)
+            }
+
+            // assert
+            assertThat(exception.errorType).isEqualTo(ErrorType.BAD_REQUEST)
+        }
     }
 }

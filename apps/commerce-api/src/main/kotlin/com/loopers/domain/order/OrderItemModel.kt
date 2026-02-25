@@ -48,6 +48,7 @@ class OrderItemModel internal constructor(
 
     init {
         validateQuantity(quantity)
+        validatePrice(price)
     }
 
     companion object {
@@ -68,6 +69,12 @@ class OrderItemModel internal constructor(
         private fun validateQuantity(quantity: Int) {
             if (quantity < 1) {
                 throw CoreException(ErrorType.BAD_REQUEST, OrderErrorCode.QUANTITY_NOT_POSITIVE)
+            }
+        }
+
+        private fun validatePrice(price: Long) {
+            if (price < 0) {
+                throw CoreException(ErrorType.BAD_REQUEST, OrderErrorCode.PRICE_NEGATIVE)
             }
         }
     }
