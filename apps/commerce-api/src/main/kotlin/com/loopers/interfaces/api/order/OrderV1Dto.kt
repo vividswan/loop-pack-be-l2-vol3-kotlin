@@ -1,7 +1,7 @@
 package com.loopers.interfaces.api.order
 
 import com.loopers.application.order.OrderInfo
-import com.loopers.domain.order.OrderService
+import com.loopers.domain.order.OrderCommand
 
 class OrderV1Dto {
     data class CreateRequest(
@@ -12,9 +12,9 @@ class OrderV1Dto {
             val quantity: Int,
         )
 
-        fun toCommands(): List<OrderService.OrderItemCommand> {
+        fun toCommands(): List<OrderCommand.CreateOrderItem> {
             return items.map {
-                OrderService.OrderItemCommand(
+                OrderCommand.CreateOrderItem(
                     productId = it.productId,
                     quantity = it.quantity,
                 )

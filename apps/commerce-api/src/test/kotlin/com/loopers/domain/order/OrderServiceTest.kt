@@ -42,7 +42,7 @@ class OrderServiceTest {
             whenever(orderRepository.save(any())).thenAnswer { it.getArgument<OrderModel>(0) }
 
             val commands = listOf(
-                OrderService.OrderItemCommand(productId = 1L, quantity = 2),
+                OrderCommand.CreateOrderItem(productId = 1L, quantity = 2),
             )
 
             // act
@@ -69,8 +69,8 @@ class OrderServiceTest {
             whenever(orderRepository.save(any())).thenAnswer { it.getArgument<OrderModel>(0) }
 
             val commands = listOf(
-                OrderService.OrderItemCommand(productId = 1L, quantity = 2),
-                OrderService.OrderItemCommand(productId = 2L, quantity = 3),
+                OrderCommand.CreateOrderItem(productId = 1L, quantity = 2),
+                OrderCommand.CreateOrderItem(productId = 2L, quantity = 3),
             )
 
             // act
@@ -92,7 +92,7 @@ class OrderServiceTest {
             whenever(productRepository.findById(1L)).thenReturn(product)
 
             val commands = listOf(
-                OrderService.OrderItemCommand(productId = 1L, quantity = 5),
+                OrderCommand.CreateOrderItem(productId = 1L, quantity = 5),
             )
 
             // act
@@ -111,7 +111,7 @@ class OrderServiceTest {
             whenever(productRepository.findById(999L)).thenReturn(null)
 
             val commands = listOf(
-                OrderService.OrderItemCommand(productId = 999L, quantity = 1),
+                OrderCommand.CreateOrderItem(productId = 999L, quantity = 1),
             )
 
             // act

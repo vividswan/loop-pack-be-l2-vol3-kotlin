@@ -1,5 +1,6 @@
 package com.loopers.application.order
 
+import com.loopers.domain.order.OrderCommand
 import com.loopers.domain.order.OrderService
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -9,7 +10,7 @@ class OrderFacade(
     private val orderService: OrderService,
 ) {
     @Transactional
-    fun createOrder(memberId: Long, items: List<OrderService.OrderItemCommand>): OrderInfo {
+    fun createOrder(memberId: Long, items: List<OrderCommand.CreateOrderItem>): OrderInfo {
         val order = orderService.createOrder(memberId, items)
         return OrderInfo.from(order)
     }

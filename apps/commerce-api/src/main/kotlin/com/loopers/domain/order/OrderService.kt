@@ -11,7 +11,7 @@ class OrderService(
     private val orderRepository: OrderRepository,
     private val productRepository: ProductRepository,
 ) {
-    fun createOrder(memberId: Long, orderItemCommands: List<OrderItemCommand>): OrderModel {
+    fun createOrder(memberId: Long, orderItemCommands: List<OrderCommand.CreateOrderItem>): OrderModel {
         val orderItems = orderItemCommands.map { command ->
             val product = productRepository.findById(command.productId)
                 ?: throw CoreException(ErrorType.NOT_FOUND, ProductErrorCode.NOT_FOUND)
@@ -34,9 +34,4 @@ class OrderService(
         return orderRepository.findById(id)
             ?: throw CoreException(ErrorType.NOT_FOUND, OrderErrorCode.NOT_FOUND)
     }
-
-    data class OrderItemCommand(
-        val productId: Long,
-        val quantity: Int,
-    )
 }
