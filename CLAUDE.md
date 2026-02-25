@@ -146,7 +146,45 @@ Root
 
 ---
 
+## 도메인 & 객체 설계 전략
+
+### Entity / Value Object / Domain Service 구분 기준
+
+| 구분 | 판단 기준 | 프로젝트 내 예시 |
+|------|-----------|-----------------|
+| **Entity** | 고유 식별자(ID)를 가지며 상태 변화와 연속성이 중요한 객체 | `ProductModel`, `OrderModel`, `LikeModel`, `BrandModel` |
+| **Value Object** | 식별자 없이 값 자체로 동등성을 판단하는 불변 객체 | `OrderStatus`, `ProductSortType` 등 Enum 기반 VO |
+| **Domain Service** | 특정 Entity에 속하기 어려운 도메인 로직을 상태 없이 처리 | `OrderService`(재고 차감 + 주문 생성 조합), `LikeService`(좋아요 + 상품 카운트 연동) |
+
+### 도메인 모델링 원칙
+
+- 도메인 객체는 **비즈니스 규칙을 캡슐화**해야 한다. 외부에서 상태를 직접 변경하지 않고, 객체가 제공하는 행위를 통해서만 변경한다.
+  - 예: `ProductModel.decreaseStock(quantity)` — 재고 음수 방지 검증을 객체 내부에서 수행
+- 도메인 규칙이 **여러 서비스에 반복적으로 나타나면** 해당 규칙은 도메인 객체에 속할 가능성이 높다.
+- Domain Service는 **상태를 갖지 않으며**, 동일 도메인 경계 내 객체 간 협력을 조율한다.
+- Entity의 생성은 **팩토리 메서드(`create()`)를 통해** 검증과 초기화를 보장한다.
+- 검증 로직은 **생성 시점(`init` / `companion object`)에서 수행**하여, 유효하지 않은 객체가 존재할 수 없도록 한다.
+
+### 도메인 간 협력 규칙
+
+- 서로 다른 도메인 간의 조합(예: Product + Brand + Like)은 **Application Layer(Facade)에서 처리**한다.
+- 동일 도메인 내 객체 간 협력(예: Product 재고 차감 → Order 생성)은 **Domain Service에서 처리**한다.
+- 각 기능의 **책임과 결합도**에 대해 개발자의 의도를 확인하고 개발을 진행한다.
+
+---
+
 ## 아키텍처 가이드
+
+### 아키텍처 전략 및 의사결정 근거
+
+- 본 프로젝트는 **레이어드 아키텍처 + DIP(의존성 역전 원칙)** 를 채택한다.
+- DIP를 적용하는 이유: 도메인 계층이 인프라 기술(JPA, Redis 등)에 의존하지 않도록 하여, **도메인 로직의 테스트 가능성과 교체 용이성**을 확보한다.
+- Repository Interface를 Domain Layer에 두는 이유: 도메인이 필요로 하는 데이터 접근 계약을 도메인 스스로 정의하고, 구현 기술은 Infrastructure에서 자유롭게 선택할 수 있도록 한다.
+- **트랜잭션 경계는 Application Layer(Facade)에 설정**한다: 유즈케이스 단위로 트랜잭션을 관리하여, 도메인 서비스는 트랜잭션에 무관하게 순수한 로직에 집중한다.
+- Facade vs Service 사용 기준:
+  - **Facade**: 여러 도메인 Service를 조합하여 유즈케이스를 완성. `@Transactional` 경계 담당.
+  - **Domain Service**: 단일 도메인 경계 내의 비즈니스 규칙 처리. 상태 없음.
+- API Request/Response Dto와 Application Layer의 Info 객체는 **분리하여 작성**한다: 계층 간 결합을 방지하고, 각 계층의 변경이 다른 계층에 전파되지 않도록 한다.
 
 ### 레이어 구조 (Clean Architecture 기반)
 
