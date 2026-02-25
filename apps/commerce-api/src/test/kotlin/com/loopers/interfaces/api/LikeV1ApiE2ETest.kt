@@ -169,6 +169,29 @@ class LikeV1ApiE2ETest @Autowired constructor(
             // assert
             assertThat(response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
         }
+
+        @DisplayName("존재하지 않는 상품에 좋아요하면, 404 Not Found 응답을 받는다.")
+        @Test
+        fun returnsNotFound_whenProductDoesNotExist() {
+            // arrange
+            createMember()
+            val headers = MemberTestFixture.createAuthHeaders(
+                MemberTestFixture.DEFAULT_LOGIN_ID,
+                MemberTestFixture.DEFAULT_PASSWORD,
+            )
+
+            // act
+            val responseType = object : ParameterizedTypeReference<ApiResponse<LikeV1Dto.LikeResponse>>() {}
+            val response = testRestTemplate.exchange(
+                "/api/v1/products/999/likes",
+                HttpMethod.POST,
+                HttpEntity<Any>(headers),
+                responseType,
+            )
+
+            // assert
+            assertThat(response.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+        }
     }
 
     @DisplayName("DELETE /api/v1/products/{productId}/likes")

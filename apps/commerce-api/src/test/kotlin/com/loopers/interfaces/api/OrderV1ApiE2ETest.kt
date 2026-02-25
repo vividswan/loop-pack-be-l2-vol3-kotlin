@@ -222,6 +222,58 @@ class OrderV1ApiE2ETest @Autowired constructor(
             // assert
             assertThat(response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
         }
+
+        @DisplayName("주문 항목이 비어있으면, 400 Bad Request 응답을 받는다.")
+        @Test
+        fun returnsBadRequest_whenItemsAreEmpty() {
+            // arrange
+            createMember()
+            val headers = MemberTestFixture.createAuthHeaders(
+                MemberTestFixture.DEFAULT_LOGIN_ID,
+                MemberTestFixture.DEFAULT_PASSWORD,
+            )
+            val request = OrderV1Dto.CreateRequest(items = emptyList())
+
+            // act
+            val responseType = object : ParameterizedTypeReference<ApiResponse<OrderV1Dto.OrderResponse>>() {}
+            val response = testRestTemplate.exchange(
+                ORDER_ENDPOINT,
+                HttpMethod.POST,
+                HttpEntity(request, headers),
+                responseType,
+            )
+
+            // assert
+            assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+        }
+
+        @DisplayName("존재하지 않는 상품으로 주문하면, 404 Not Found 응답을 받는다.")
+        @Test
+        fun returnsNotFound_whenProductDoesNotExist() {
+            // arrange
+            createMember()
+            val headers = MemberTestFixture.createAuthHeaders(
+                MemberTestFixture.DEFAULT_LOGIN_ID,
+                MemberTestFixture.DEFAULT_PASSWORD,
+            )
+            val request = OrderV1Dto.CreateRequest(
+                items = listOf(
+                    OrderV1Dto.CreateRequest.OrderItemRequest(productId = 999L, quantity = 1),
+                ),
+            )
+
+            // act
+            val responseType = object : ParameterizedTypeReference<ApiResponse<OrderV1Dto.OrderResponse>>() {}
+            val response = testRestTemplate.exchange(
+                ORDER_ENDPOINT,
+                HttpMethod.POST,
+                HttpEntity(request, headers),
+                responseType,
+            )
+
+            // assert
+            assertThat(response.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+        }
     }
 
     @DisplayName("GET /api/v1/orders/{id}")
