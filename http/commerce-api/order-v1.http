@@ -1,0 +1,19 @@
+### 주문 생성
+POST {{commerce-api}}/api/v1/orders
+Content-Type: application/json
+X-Loopers-LoginId: testuser
+X-Loopers-LoginPw: Test1234!
+
+{
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 2
+    }
+  ]
+}
+
+### 주문 상세 조회
+GET {{commerce-api}}/api/v1/orders/1
+X-Loopers-LoginId: testuser
+X-Loopers-LoginPw: Test1234!
