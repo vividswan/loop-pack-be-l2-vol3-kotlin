@@ -1,0 +1,11 @@
+dn: ou=admins,dc=loopers,dc=com
+objectClass: organizationalUnit
+ou: admins
+
+dn: cn=admin1,ou=admins,dc=loopers,dc=com
+objectClass: inetOrgPerson
+cn: admin1
+sn: Admin
+uid: admin1
+userPassword: admin1234
+mail: admin1@loopers.com

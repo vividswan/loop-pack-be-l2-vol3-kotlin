@@ -38,7 +38,7 @@ class LikeServiceTest {
         fun savesLikeAndIncreasesLikeCount_whenFirstLike() {
             // arrange
             val product = ProductModel.create(name = "운동화", price = 50000L, stock = 10, brandId = 1L)
-            whenever(productRepository.findById(1L)).thenReturn(product)
+            whenever(productRepository.findByIdWithLock(1L)).thenReturn(product)
             whenever(likeRepository.existsByMemberIdAndProductId(1L, 1L)).thenReturn(false)
             whenever(likeRepository.save(any())).thenAnswer { it.getArgument<LikeModel>(0) }
 
@@ -56,7 +56,7 @@ class LikeServiceTest {
         fun throwsConflict_whenAlreadyLiked() {
             // arrange
             val product = ProductModel.create(name = "운동화", price = 50000L, stock = 10, brandId = 1L)
-            whenever(productRepository.findById(1L)).thenReturn(product)
+            whenever(productRepository.findByIdWithLock(1L)).thenReturn(product)
             whenever(likeRepository.existsByMemberIdAndProductId(1L, 1L)).thenReturn(true)
 
             // act
@@ -72,7 +72,7 @@ class LikeServiceTest {
         @Test
         fun throwsNotFound_whenProductDoesNotExist() {
             // arrange
-            whenever(productRepository.findById(999L)).thenReturn(null)
+            whenever(productRepository.findByIdWithLock(999L)).thenReturn(null)
 
             // act
             val exception = assertThrows<CoreException> {
@@ -96,7 +96,7 @@ class LikeServiceTest {
             product.increaseLikeCount()
             val like = LikeModel.create(memberId = 1L, productId = 1L)
 
-            whenever(productRepository.findById(1L)).thenReturn(product)
+            whenever(productRepository.findByIdWithLock(1L)).thenReturn(product)
             whenever(likeRepository.findByMemberIdAndProductId(1L, 1L)).thenReturn(like)
 
             // act
@@ -112,7 +112,7 @@ class LikeServiceTest {
         fun throwsNotFound_whenLikeDoesNotExist() {
             // arrange
             val product = ProductModel.create(name = "운동화", price = 50000L, stock = 10, brandId = 1L)
-            whenever(productRepository.findById(1L)).thenReturn(product)
+            whenever(productRepository.findByIdWithLock(1L)).thenReturn(product)
             whenever(likeRepository.findByMemberIdAndProductId(1L, 1L)).thenReturn(null)
 
             // act
@@ -128,7 +128,7 @@ class LikeServiceTest {
         @Test
         fun throwsNotFound_whenProductDoesNotExist() {
             // arrange
-            whenever(productRepository.findById(999L)).thenReturn(null)
+            whenever(productRepository.findByIdWithLock(999L)).thenReturn(null)
 
             // act
             val exception = assertThrows<CoreException> {

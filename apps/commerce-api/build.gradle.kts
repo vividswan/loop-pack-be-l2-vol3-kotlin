@@ -13,6 +13,9 @@ dependencies {
     // security (password encoding only)
     implementation("org.springframework.security:spring-security-crypto")
 
+    // ldap
+    implementation("org.springframework.boot:spring-boot-starter-data-ldap")
+
     // web
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
