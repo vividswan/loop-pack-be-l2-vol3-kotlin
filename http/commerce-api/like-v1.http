@@ -1,0 +1,9 @@
+### 좋아요 등록
+POST {{commerce-api}}/api/v1/products/1/likes
+X-Loopers-LoginId: testuser
+X-Loopers-LoginPw: Test1234!
+
+### 좋아요 취소
+DELETE {{commerce-api}}/api/v1/products/1/likes
+X-Loopers-LoginId: testuser
+X-Loopers-LoginPw: Test1234!

@@ -1,0 +1,11 @@
+### 브랜드 등록
+POST {{commerce-api}}/api/v1/brands
+Content-Type: application/json
+
+{
+  "name": "나이키",
+  "description": "스포츠 브랜드"
+}
+
+### 브랜드 목록 조회
+GET {{commerce-api}}/api/v1/brands
