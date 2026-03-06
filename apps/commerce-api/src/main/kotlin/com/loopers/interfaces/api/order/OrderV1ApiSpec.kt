@@ -9,7 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 @Tag(name = "Order", description = "주문 API")
 interface OrderV1ApiSpec {
 
-    @Operation(summary = "주문 생성", description = "새로운 주문을 생성합니다.")
+    @Operation(summary = "주문 생성", description = "새로운 주문을 생성합니다. 쿠폰 적용 가능.")
     fun createOrder(
         @AuthenticatedMember memberInfo: MemberInfo,
         request: OrderV1Dto.CreateRequest,

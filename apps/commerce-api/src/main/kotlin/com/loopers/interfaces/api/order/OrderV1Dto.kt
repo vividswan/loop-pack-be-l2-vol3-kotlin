@@ -6,19 +6,23 @@ import com.loopers.domain.order.OrderCommand
 class OrderV1Dto {
     data class CreateRequest(
         val items: List<OrderItemRequest>,
+        val couponId: Long? = null,
     ) {
         data class OrderItemRequest(
             val productId: Long,
             val quantity: Int,
         )
 
-        fun toCommands(): List<OrderCommand.CreateOrderItem> {
-            return items.map {
-                OrderCommand.CreateOrderItem(
-                    productId = it.productId,
-                    quantity = it.quantity,
-                )
-            }
+        fun toCommand(): OrderCommand.CreateOrder {
+            return OrderCommand.CreateOrder(
+                items = items.map {
+                    OrderCommand.CreateOrderItem(
+                        productId = it.productId,
+                        quantity = it.quantity,
+                    )
+                },
+                couponId = couponId,
+            )
         }
     }
 
@@ -27,6 +31,9 @@ class OrderV1Dto {
         val memberId: Long,
         val status: String,
         val totalPrice: Long,
+        val originalPrice: Long,
+        val discountAmount: Long,
+        val couponId: Long?,
         val orderItems: List<OrderItemResponse>,
     ) {
         data class OrderItemResponse(
@@ -54,6 +61,9 @@ class OrderV1Dto {
                     memberId = info.memberId,
                     status = info.status,
                     totalPrice = info.totalPrice,
+                    originalPrice = info.originalPrice,
+                    discountAmount = info.discountAmount,
+                    couponId = info.couponId,
                     orderItems = info.orderItems.map { OrderItemResponse.from(it) },
                 )
             }

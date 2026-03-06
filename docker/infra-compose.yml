@@ -100,11 +100,34 @@ services:
       KAFKA_CLUSTERS_0_NAME: local  # kafka-ui 에서 보이는 클러스터명
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092 # kafka-ui 가 연겷할 브로커 주소
 
+  openldap:
+    image: osixia/openldap:1.5.0
+    container_name: openldap
+    ports:
+      - "389:389"   # LDAP
+      - "636:636"   # LDAPS
+    environment:
+      - LDAP_ORGANISATION=Loopers
+      - LDAP_DOMAIN=loopers.com
+      - LDAP_ADMIN_PASSWORD=adminpassword
+    volumes:
+      - openldap-data:/var/lib/ldap
+      - openldap-config:/etc/ldap/slapd.d
+      - ./ldap/init.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/init.ldif
+    command: "--copy-service"
+    healthcheck:
+      test: ["CMD", "ldapsearch", "-x", "-H", "ldap://localhost", "-b", "dc=loopers,dc=com", "-D", "cn=admin,dc=loopers,dc=com", "-w", "adminpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
 volumes:
   mysql-8-data:
   redis_master_data:
   redis_readonly_data:
   kafka-data:
+  openldap-data:
+  openldap-config:
 
 networks:
   default:

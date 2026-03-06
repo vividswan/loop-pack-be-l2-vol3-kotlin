@@ -25,7 +25,7 @@ class OrderV1Controller(
         @AuthenticatedMember memberInfo: MemberInfo,
         @RequestBody request: OrderV1Dto.CreateRequest,
     ): ApiResponse<OrderV1Dto.OrderResponse> {
-        return orderFacade.createOrder(memberInfo.id, request.toCommands())
+        return orderFacade.createOrder(memberInfo.id, request.toCommand())
             .let { OrderV1Dto.OrderResponse.from(it) }
             .let { ApiResponse.success(it) }
     }
