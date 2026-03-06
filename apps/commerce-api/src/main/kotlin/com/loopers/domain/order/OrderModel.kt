@@ -35,13 +35,33 @@ class OrderModel internal constructor(
     var totalPrice: Long = 0L
         protected set
 
+    @Column(name = "original_price", nullable = false)
+    var originalPrice: Long = 0L
+        protected set
+
+    @Column(name = "discount_amount", nullable = false)
+    var discountAmount: Long = 0L
+        protected set
+
+    @Column(name = "coupon_id")
+    var couponId: Long? = null
+        protected set
+
     @OneToMany(mappedBy = "order", cascade = [CascadeType.ALL], fetch = FetchType.LAZY, orphanRemoval = true)
     val orderItems: MutableList<OrderItemModel> = mutableListOf()
 
     fun addItem(item: OrderItemModel) {
         item.order = this
         orderItems.add(item)
-        totalPrice += item.getTotalPrice()
+        val itemPrice = item.getTotalPrice()
+        originalPrice += itemPrice
+        totalPrice += itemPrice
+    }
+
+    fun applyDiscount(discountAmount: Long, couponId: Long) {
+        this.discountAmount = discountAmount
+        this.couponId = couponId
+        this.totalPrice = originalPrice - discountAmount
     }
 
     fun cancel() {

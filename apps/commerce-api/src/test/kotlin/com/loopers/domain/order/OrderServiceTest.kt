@@ -38,7 +38,7 @@ class OrderServiceTest {
         fun savesOrderAndDecreasesStock_whenOrderIsValid() {
             // arrange
             val product = ProductModel.create(name = "운동화", price = 50000L, stock = 10, brandId = 1L)
-            whenever(productRepository.findById(1L)).thenReturn(product)
+            whenever(productRepository.findByIdWithLock(1L)).thenReturn(product)
             whenever(orderRepository.save(any())).thenAnswer { it.getArgument<OrderModel>(0) }
 
             val commands = listOf(
@@ -64,8 +64,8 @@ class OrderServiceTest {
             // arrange
             val product1 = ProductModel.create(name = "운동화", price = 50000L, stock = 10, brandId = 1L)
             val product2 = ProductModel.create(name = "티셔츠", price = 30000L, stock = 5, brandId = 1L)
-            whenever(productRepository.findById(1L)).thenReturn(product1)
-            whenever(productRepository.findById(2L)).thenReturn(product2)
+            whenever(productRepository.findByIdWithLock(1L)).thenReturn(product1)
+            whenever(productRepository.findByIdWithLock(2L)).thenReturn(product2)
             whenever(orderRepository.save(any())).thenAnswer { it.getArgument<OrderModel>(0) }
 
             val commands = listOf(
@@ -89,7 +89,7 @@ class OrderServiceTest {
         fun throwsBadRequest_whenStockIsNotEnough() {
             // arrange
             val product = ProductModel.create(name = "운동화", price = 50000L, stock = 3, brandId = 1L)
-            whenever(productRepository.findById(1L)).thenReturn(product)
+            whenever(productRepository.findByIdWithLock(1L)).thenReturn(product)
 
             val commands = listOf(
                 OrderCommand.CreateOrderItem(productId = 1L, quantity = 5),
@@ -108,7 +108,7 @@ class OrderServiceTest {
         @Test
         fun throwsNotFound_whenProductDoesNotExist() {
             // arrange
-            whenever(productRepository.findById(999L)).thenReturn(null)
+            whenever(productRepository.findByIdWithLock(999L)).thenReturn(null)
 
             val commands = listOf(
                 OrderCommand.CreateOrderItem(productId = 999L, quantity = 1),

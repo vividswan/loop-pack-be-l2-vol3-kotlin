@@ -8,6 +8,9 @@ data class OrderInfo(
     val memberId: Long,
     val status: String,
     val totalPrice: Long,
+    val originalPrice: Long,
+    val discountAmount: Long,
+    val couponId: Long?,
     val orderItems: List<OrderItemInfo>,
 ) {
     data class OrderItemInfo(
@@ -35,6 +38,9 @@ data class OrderInfo(
                 memberId = model.memberId,
                 status = model.status.name,
                 totalPrice = model.totalPrice,
+                originalPrice = model.originalPrice,
+                discountAmount = model.discountAmount,
+                couponId = model.couponId,
                 orderItems = model.orderItems.map { OrderItemInfo.from(it) },
             )
         }

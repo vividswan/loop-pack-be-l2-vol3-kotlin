@@ -34,6 +34,11 @@ spring:
   config:
     activate:
       on-profile: local, test
+  ldap:
+    urls: ldap://localhost:389
+    base: dc=loopers,dc=com
+    username: cn=admin,dc=loopers,dc=com
+    password: adminpassword
 
 ---
 spring:

@@ -5,4 +5,9 @@ class OrderCommand {
         val productId: Long,
         val quantity: Int,
     )
+
+    data class CreateOrder(
+        val items: List<CreateOrderItem>,
+        val couponId: Long?,
+    )
 }
