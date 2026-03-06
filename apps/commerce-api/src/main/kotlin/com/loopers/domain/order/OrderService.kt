@@ -13,7 +13,7 @@ class OrderService(
 ) {
     fun createOrder(memberId: Long, orderItemCommands: List<OrderCommand.CreateOrderItem>): OrderModel {
         val orderItems = orderItemCommands.map { command ->
-            val product = productRepository.findById(command.productId)
+            val product = productRepository.findByIdWithLock(command.productId)
                 ?: throw CoreException(ErrorType.NOT_FOUND, ProductErrorCode.NOT_FOUND)
 
             product.decreaseStock(command.quantity)

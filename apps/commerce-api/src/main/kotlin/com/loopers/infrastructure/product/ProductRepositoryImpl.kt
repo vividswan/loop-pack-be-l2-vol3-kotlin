@@ -17,6 +17,10 @@ class ProductRepositoryImpl(
         return productJpaRepository.findById(id).orElse(null)
     }
 
+    override fun findByIdWithLock(id: Long): ProductModel? {
+        return productJpaRepository.findByIdWithLock(id)
+    }
+
     override fun findAllOrderByCreatedAtDesc(): List<ProductModel> {
         return productJpaRepository.findAllByOrderByCreatedAtDesc()
     }

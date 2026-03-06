@@ -12,7 +12,7 @@ class LikeService(
     private val productRepository: ProductRepository,
 ) {
     fun like(memberId: Long, productId: Long): LikeModel {
-        val product = productRepository.findById(productId)
+        val product = productRepository.findByIdWithLock(productId)
             ?: throw CoreException(ErrorType.NOT_FOUND, ProductErrorCode.NOT_FOUND)
 
         if (likeRepository.existsByMemberIdAndProductId(memberId, productId)) {
@@ -26,7 +26,7 @@ class LikeService(
     }
 
     fun unlike(memberId: Long, productId: Long) {
-        val product = productRepository.findById(productId)
+        val product = productRepository.findByIdWithLock(productId)
             ?: throw CoreException(ErrorType.NOT_FOUND, ProductErrorCode.NOT_FOUND)
 
         val like = likeRepository.findByMemberIdAndProductId(memberId, productId)

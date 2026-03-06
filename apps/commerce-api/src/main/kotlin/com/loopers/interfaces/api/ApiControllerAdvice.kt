@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.loopers.support.error.CoreException
 import com.loopers.support.error.ErrorType
 import org.slf4j.LoggerFactory
+import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MissingServletRequestParameterException
@@ -97,6 +98,12 @@ class ApiControllerAdvice {
         } else {
             failureResponse(errorType = ErrorType.BAD_REQUEST)
         }
+    }
+
+    @ExceptionHandler
+    fun handleOptimisticLock(e: OptimisticLockingFailureException): ResponseEntity<ApiResponse<*>> {
+        log.warn("OptimisticLockingFailureException : {}", e.message, e)
+        return failureResponse(errorType = ErrorType.CONFLICT, errorMessage = "동시 요청으로 인해 처리에 실패했습니다. 다시 시도해 주세요.")
     }
 
     @ExceptionHandler
