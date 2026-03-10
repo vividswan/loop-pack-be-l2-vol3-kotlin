@@ -7,6 +7,7 @@ import com.loopers.infrastructure.product.ProductJpaRepository
 import com.loopers.interfaces.api.brand.BrandV1Dto
 import com.loopers.interfaces.api.product.ProductV1Dto
 import com.loopers.utils.DatabaseCleanUp
+import com.loopers.utils.RedisCleanUp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.DisplayName
@@ -27,6 +28,7 @@ class BrandAndProductV1ApiE2ETest @Autowired constructor(
     private val brandJpaRepository: BrandJpaRepository,
     private val productJpaRepository: ProductJpaRepository,
     private val databaseCleanUp: DatabaseCleanUp,
+    private val redisCleanUp: RedisCleanUp,
 ) {
     companion object {
         private const val BRAND_ENDPOINT = "/api/v1/brands"
@@ -36,6 +38,7 @@ class BrandAndProductV1ApiE2ETest @Autowired constructor(
     @AfterEach
     fun tearDown() {
         databaseCleanUp.truncateAllTables()
+        redisCleanUp.truncateAll()
     }
 
     @DisplayName("POST /api/v1/brands")
@@ -225,6 +228,73 @@ class BrandAndProductV1ApiE2ETest @Autowired constructor(
                 { assertThat(response.statusCode).isEqualTo(HttpStatus.OK) },
                 { assertThat(response.body?.data?.products?.first()?.price).isEqualTo(30000L) },
                 { assertThat(response.body?.data?.products?.last()?.price).isEqualTo(50000L) },
+            )
+        }
+
+        @DisplayName("브랜드 ID로 필터링하면, 해당 브랜드의 상품만 반환된다.")
+        @Test
+        fun returnsOnlyFilteredBrandProducts() {
+            // arrange
+            val nike = brandJpaRepository.save(BrandModel.create(name = "나이키", description = "스포츠"))
+            val adidas = brandJpaRepository.save(BrandModel.create(name = "아디다스", description = "스포츠"))
+            productJpaRepository.save(ProductModel.create(name = "에어맥스", price = 169000L, stock = 10, brandId = nike.id))
+            productJpaRepository.save(ProductModel.create(name = "조던", price = 219000L, stock = 5, brandId = nike.id))
+            productJpaRepository.save(ProductModel.create(name = "울트라부스트", price = 199000L, stock = 15, brandId = adidas.id))
+
+            // act
+            val responseType =
+                object : ParameterizedTypeReference<ApiResponse<ProductV1Dto.ProductPageResponse>>() {}
+            val response = testRestTemplate.exchange(
+                "$PRODUCT_ENDPOINT?brandId=${nike.id}&sort=latest",
+                HttpMethod.GET,
+                null,
+                responseType,
+            )
+
+            // assert
+            assertAll(
+                { assertThat(response.statusCode).isEqualTo(HttpStatus.OK) },
+                { assertThat(response.body?.data?.products).hasSize(2) },
+                { assertThat(response.body?.data?.totalCount).isEqualTo(2L) },
+                {
+                    assertThat(response.body?.data?.products).allMatch { it.brandId == nike.id }
+                },
+            )
+        }
+
+        @DisplayName("페이지네이션이 정상적으로 동작한다.")
+        @Test
+        fun returnsPaginatedProducts() {
+            // arrange
+            val brand = brandJpaRepository.save(BrandModel.create(name = "나이키", description = "스포츠"))
+            repeat(5) { i ->
+                productJpaRepository.save(
+                    ProductModel.create(
+                        name = "상품-$i",
+                        price = (10000 + i * 1000).toLong(),
+                        stock = 10,
+                        brandId = brand.id,
+                    ),
+                )
+            }
+
+            // act
+            val responseType =
+                object : ParameterizedTypeReference<ApiResponse<ProductV1Dto.ProductPageResponse>>() {}
+            val response = testRestTemplate.exchange(
+                "$PRODUCT_ENDPOINT?sort=price_asc&page=0&size=2",
+                HttpMethod.GET,
+                null,
+                responseType,
+            )
+
+            // assert
+            assertAll(
+                { assertThat(response.statusCode).isEqualTo(HttpStatus.OK) },
+                { assertThat(response.body?.data?.products).hasSize(2) },
+                { assertThat(response.body?.data?.totalCount).isEqualTo(5L) },
+                { assertThat(response.body?.data?.page).isEqualTo(0) },
+                { assertThat(response.body?.data?.size).isEqualTo(2) },
             )
         }
     }
