@@ -2,6 +2,7 @@ package com.loopers.domain.product
 
 import com.loopers.support.error.CoreException
 import com.loopers.support.error.ErrorType
+import org.springframework.data.domain.Page
 import org.springframework.stereotype.Component
 
 @Component
@@ -24,5 +25,9 @@ class ProductService(
             ProductSortType.PRICE_ASC -> productRepository.findAllOrderByPriceAsc()
             ProductSortType.LIKES_DESC -> productRepository.findAllOrderByLikeCountDesc()
         }
+    }
+
+    fun getProducts(brandId: Long?, sortType: ProductSortType, page: Int, size: Int): Page<ProductModel> {
+        return productRepository.findProducts(brandId, sortType, page, size)
     }
 }

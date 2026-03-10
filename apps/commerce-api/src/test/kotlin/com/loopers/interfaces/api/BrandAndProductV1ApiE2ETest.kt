@@ -176,16 +176,17 @@ class BrandAndProductV1ApiE2ETest @Autowired constructor(
     @Nested
     inner class GetProducts {
 
-        @DisplayName("상품 목록 조회 요청하면, 200 OK와 목록을 반환한다.")
+        @DisplayName("상품 목록 조회 요청하면, 200 OK와 페이지네이션 응답을 반환한다.")
         @Test
-        fun returnsOkWithProductList() {
+        fun returnsOkWithProductPage() {
             // arrange
             val brand = brandJpaRepository.save(BrandModel.create(name = "나이키", description = "스포츠"))
             productJpaRepository.save(ProductModel.create(name = "운동화", price = 50000L, stock = 10, brandId = brand.id))
             productJpaRepository.save(ProductModel.create(name = "티셔츠", price = 30000L, stock = 20, brandId = brand.id))
 
             // act
-            val responseType = object : ParameterizedTypeReference<ApiResponse<List<ProductV1Dto.ProductListResponse>>>() {}
+            val responseType =
+                object : ParameterizedTypeReference<ApiResponse<ProductV1Dto.ProductPageResponse>>() {}
             val response = testRestTemplate.exchange(
                 "$PRODUCT_ENDPOINT?sort=latest",
                 HttpMethod.GET,
@@ -196,7 +197,8 @@ class BrandAndProductV1ApiE2ETest @Autowired constructor(
             // assert
             assertAll(
                 { assertThat(response.statusCode).isEqualTo(HttpStatus.OK) },
-                { assertThat(response.body?.data).hasSize(2) },
+                { assertThat(response.body?.data?.products).hasSize(2) },
+                { assertThat(response.body?.data?.totalCount).isEqualTo(2L) },
             )
         }
 
@@ -209,7 +211,8 @@ class BrandAndProductV1ApiE2ETest @Autowired constructor(
             productJpaRepository.save(ProductModel.create(name = "티셔츠", price = 30000L, stock = 20, brandId = brand.id))
 
             // act
-            val responseType = object : ParameterizedTypeReference<ApiResponse<List<ProductV1Dto.ProductListResponse>>>() {}
+            val responseType =
+                object : ParameterizedTypeReference<ApiResponse<ProductV1Dto.ProductPageResponse>>() {}
             val response = testRestTemplate.exchange(
                 "$PRODUCT_ENDPOINT?sort=price_asc",
                 HttpMethod.GET,
@@ -220,8 +223,8 @@ class BrandAndProductV1ApiE2ETest @Autowired constructor(
             // assert
             assertAll(
                 { assertThat(response.statusCode).isEqualTo(HttpStatus.OK) },
-                { assertThat(response.body?.data?.first()?.price).isEqualTo(30000L) },
-                { assertThat(response.body?.data?.last()?.price).isEqualTo(50000L) },
+                { assertThat(response.body?.data?.products?.first()?.price).isEqualTo(30000L) },
+                { assertThat(response.body?.data?.products?.last()?.price).isEqualTo(50000L) },
             )
         }
     }

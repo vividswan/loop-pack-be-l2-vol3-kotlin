@@ -2,6 +2,7 @@ package com.loopers.application.product
 
 import com.loopers.domain.brand.BrandModel
 import com.loopers.domain.product.ProductModel
+import org.springframework.data.domain.Page
 
 data class ProductInfo(
     val id: Long,
@@ -34,6 +35,24 @@ data class ProductInfo(
                 likeCount = product.likeCount,
                 brandId = product.brandId,
                 brandName = brand.name,
+            )
+        }
+    }
+}
+
+data class ProductPageInfo(
+    val totalCount: Long,
+    val page: Int,
+    val size: Int,
+    val items: List<ProductInfo>,
+) {
+    companion object {
+        fun from(pageResult: Page<ProductModel>): ProductPageInfo {
+            return ProductPageInfo(
+                totalCount = pageResult.totalElements,
+                page = pageResult.number,
+                size = pageResult.size,
+                items = pageResult.content.map { ProductInfo.from(it) },
             )
         }
     }
