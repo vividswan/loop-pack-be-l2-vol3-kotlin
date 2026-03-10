@@ -24,6 +24,12 @@ class ProductFacade(
     }
 
     @Transactional(readOnly = true)
+    fun getProducts(brandId: Long?, sortType: ProductSortType, page: Int, size: Int): ProductPageInfo {
+        val pageResult = productService.getProducts(brandId, sortType, page, size)
+        return ProductPageInfo.from(pageResult)
+    }
+
+    @Transactional(readOnly = true)
     fun getProductDetail(productId: Long): ProductInfo {
         val product = productService.getProduct(productId)
         val brand = brandService.getBrand(product.brandId)
