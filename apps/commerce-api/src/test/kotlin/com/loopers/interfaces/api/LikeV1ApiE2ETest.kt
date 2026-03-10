@@ -7,6 +7,7 @@ import com.loopers.fixtures.MemberTestFixture
 import com.loopers.infrastructure.brand.BrandJpaRepository
 import com.loopers.infrastructure.member.MemberJpaRepository
 import com.loopers.infrastructure.product.ProductJpaRepository
+import com.loopers.infrastructure.product.ProductLocalCacheManager
 import com.loopers.interfaces.api.like.LikeV1Dto
 import com.loopers.interfaces.api.product.ProductV1Dto
 import com.loopers.utils.DatabaseCleanUp
@@ -32,11 +33,13 @@ class LikeV1ApiE2ETest @Autowired constructor(
     private val brandJpaRepository: BrandJpaRepository,
     private val productJpaRepository: ProductJpaRepository,
     private val passwordEncoder: PasswordEncoder,
+    private val productLocalCacheManager: ProductLocalCacheManager,
     private val databaseCleanUp: DatabaseCleanUp,
 ) {
     @AfterEach
     fun tearDown() {
         databaseCleanUp.truncateAllTables()
+        productLocalCacheManager.evictAll()
     }
 
     private fun createMember(): MemberModel {
