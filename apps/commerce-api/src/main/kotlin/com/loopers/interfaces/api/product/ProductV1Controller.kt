@@ -32,14 +32,17 @@ class ProductV1Controller(
     @GetMapping
     override fun getProducts(
         @RequestParam(defaultValue = "latest") sort: String?,
-    ): ApiResponse<List<ProductV1Dto.ProductListResponse>> {
+        @RequestParam(required = false) brandId: Long?,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int,
+    ): ApiResponse<ProductV1Dto.ProductPageResponse> {
         val sortType = when (sort?.lowercase()) {
             "price_asc" -> ProductSortType.PRICE_ASC
             "likes_desc" -> ProductSortType.LIKES_DESC
             else -> ProductSortType.LATEST
         }
-        return productFacade.getProducts(sortType)
-            .map { ProductV1Dto.ProductListResponse.from(it) }
+        return productFacade.getProducts(brandId, sortType, page, size)
+            .let { ProductV1Dto.ProductPageResponse.from(it) }
             .let { ApiResponse.success(it) }
     }
 

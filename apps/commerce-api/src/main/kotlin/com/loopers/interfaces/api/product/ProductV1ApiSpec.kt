@@ -10,8 +10,16 @@ interface ProductV1ApiSpec {
     @Operation(summary = "상품 등록", description = "새로운 상품을 등록합니다.")
     fun register(request: ProductV1Dto.RegisterRequest): ApiResponse<ProductV1Dto.RegisterResponse>
 
-    @Operation(summary = "상품 목록 조회", description = "상품 목록을 정렬 조건에 따라 조회합니다.")
-    fun getProducts(sort: String?): ApiResponse<List<ProductV1Dto.ProductListResponse>>
+    @Operation(
+        summary = "상품 목록 조회",
+        description = "상품 목록을 브랜드 필터, 정렬 조건, 페이지네이션으로 조회합니다.",
+    )
+    fun getProducts(
+        sort: String?,
+        brandId: Long?,
+        page: Int,
+        size: Int,
+    ): ApiResponse<ProductV1Dto.ProductPageResponse>
 
     @Operation(summary = "상품 상세 조회", description = "상품 상세 정보를 조회합니다. (브랜드 정보 포함)")
     fun getProductDetail(id: Long): ApiResponse<ProductV1Dto.ProductDetailResponse>

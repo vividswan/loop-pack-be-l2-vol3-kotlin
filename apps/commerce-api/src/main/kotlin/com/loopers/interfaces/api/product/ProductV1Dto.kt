@@ -1,6 +1,7 @@
 package com.loopers.interfaces.api.product
 
 import com.loopers.application.product.ProductInfo
+import com.loopers.application.product.ProductPageInfo
 
 class ProductV1Dto {
     data class RegisterRequest(
@@ -71,6 +72,24 @@ class ProductV1Dto {
                     likeCount = info.likeCount,
                     brandId = info.brandId,
                     brandName = info.brandName,
+                )
+            }
+        }
+    }
+
+    data class ProductPageResponse(
+        val totalCount: Long,
+        val page: Int,
+        val size: Int,
+        val products: List<ProductListResponse>,
+    ) {
+        companion object {
+            fun from(info: ProductPageInfo): ProductPageResponse {
+                return ProductPageResponse(
+                    totalCount = info.totalCount,
+                    page = info.page,
+                    size = info.size,
+                    products = info.items.map { ProductListResponse.from(it) },
                 )
             }
         }
