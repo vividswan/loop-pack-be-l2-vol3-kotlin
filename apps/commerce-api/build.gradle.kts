@@ -21,6 +21,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:${project.properties["springDocOpenApiVersion"]}")
 
+    // local cache
+    implementation("com.github.ben-manes.caffeine:caffeine")
+
     // querydsl
     kapt("com.querydsl:querydsl-apt::jakarta")
 
