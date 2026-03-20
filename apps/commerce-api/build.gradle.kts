@@ -10,6 +10,13 @@ dependencies {
     implementation(project(":supports:logging"))
     implementation(project(":supports:monitoring"))
 
+    // feign client
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
+
+    // resilience4j (circuit breaker, retry, time limiter)
+    implementation("io.github.resilience4j:resilience4j-spring-boot3")
+    implementation("org.springframework.boot:spring-boot-starter-aop")
+
     // security (password encoding only)
     implementation("org.springframework.security:spring-security-crypto")
 
