@@ -23,11 +23,37 @@ spring:
       - redis.yml
       - logging.yml
       - monitoring.yml
+  task:
+    scheduling:
+      pool:
+        size: 1
 
 springdoc:
   use-fqn: true
   swagger-ui:
     path: /swagger-ui.html
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      pg:
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 5
+        slowCallDurationThreshold: 4s
+        slowCallRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        slidingWindowType: COUNT_BASED
+  retry:
+    instances:
+      pg:
+        maxAttempts: 3
+        waitDuration: 500ms
+        retryExceptions:
+          - java.net.ConnectException
+          - java.net.SocketTimeoutException
+          - feign.RetryableException
 
 ---
 spring:
@@ -39,6 +65,13 @@ spring:
     base: dc=loopers,dc=com
     username: cn=admin,dc=loopers,dc=com
     password: adminpassword
+
+pg:
+  simulator:
+    url: http://localhost:8090
+
+payment:
+  callback-url: http://localhost:8080/api/v1/payments/callback
 
 ---
 spring:
