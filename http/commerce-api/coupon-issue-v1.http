@@ -1,0 +1,9 @@
+### 선착순 쿠폰 발급 요청
+POST {{host}}/api/v1/coupons/first-come/1/issue
+Content-Type: application/json
+Authorization: Basic dXNlcjE6cGFzc3dvcmQ=
+
+### 발급 요청 상태 조회
+GET {{host}}/api/v1/coupons/first-come/requests/1
+Content-Type: application/json
+Authorization: Basic dXNlcjE6cGFzc3dvcmQ=
