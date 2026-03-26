@@ -100,7 +100,10 @@ object PaymentDto {
     }
 
     enum class CardTypeDto {
-        SAMSUNG, KB, HYUNDAI;
+        SAMSUNG,
+        KB,
+        HYUNDAI,
+        ;
 
         fun toCardType(): CardType = when (this) {
             SAMSUNG -> CardType.SAMSUNG
@@ -118,7 +121,10 @@ object PaymentDto {
     }
 
     enum class TransactionStatusResponse {
-        PENDING, SUCCESS, FAILED;
+        PENDING,
+        SUCCESS,
+        FAILED,
+        ;
 
         companion object {
             fun from(transactionStatus: TransactionStatus) = when (transactionStatus) {
