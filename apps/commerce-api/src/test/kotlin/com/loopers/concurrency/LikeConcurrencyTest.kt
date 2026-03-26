@@ -85,6 +85,9 @@ class LikeConcurrencyTest @Autowired constructor(
         assertThat(successCount).isEqualTo(threadCount)
         assertThat(failCount).isEqualTo(0)
 
+        // 비동기 집계 처리 대기 (AFTER_COMMIT + @Async + REQUIRES_NEW)
+        Thread.sleep(3000)
+
         val updatedProduct = productJpaRepository.findById(product.id).get()
         assertThat(updatedProduct.likeCount).isEqualTo(threadCount)
     }

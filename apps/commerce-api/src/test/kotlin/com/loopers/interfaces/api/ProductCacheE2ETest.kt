@@ -190,6 +190,9 @@ class ProductCacheE2ETest @Autowired constructor(
                 object : ParameterizedTypeReference<ApiResponse<LikeV1Dto.LikeResponse>>() {},
             )
 
+            // 비동기 집계 + 캐시 무효화 처리 대기
+            Thread.sleep(7000)
+
             // act - 다시 조회 (캐시 재생성, likeCount = 1)
             val response = testRestTemplate.exchange(
                 "$PRODUCT_ENDPOINT/${product.id}",
