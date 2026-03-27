@@ -15,4 +15,7 @@ enum class CouponErrorCode(override val code: String, override val message: Stri
     NOT_AVAILABLE("coupon.not-available", "사용 가능한 상태의 쿠폰이 아닙니다."),
     ALREADY_ISSUED("coupon.already-issued", "이미 발급받은 쿠폰입니다."),
     OWNER_MISMATCH("coupon.owner-mismatch", "본인 소유의 쿠폰이 아닙니다."),
+    ISSUE_REQUEST_NOT_FOUND("coupon.issue-request.not-found", "쿠폰 발급 요청을 찾을 수 없습니다."),
+    SOLD_OUT("coupon.sold-out", "선착순 쿠폰이 모두 소진되었습니다."),
+    NOT_FIRST_COME_COUPON("coupon.not-first-come", "선착순 쿠폰이 아닙니다."),
 }

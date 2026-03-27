@@ -29,6 +29,11 @@ demo-kafka:
   test:
     topic-name: demo.internal.topic-v1
 
+event-topics:
+  catalog-events: catalog-events
+  order-events: order-events
+  coupon-issue-requests: coupon-issue-requests
+
 ---
 spring:
   config:

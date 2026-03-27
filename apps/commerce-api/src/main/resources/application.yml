@@ -21,12 +21,13 @@ spring:
     import:
       - jpa.yml
       - redis.yml
+      - kafka.yml
       - logging.yml
       - monitoring.yml
   task:
     scheduling:
       pool:
-        size: 1
+        size: 2
 
 springdoc:
   use-fqn: true

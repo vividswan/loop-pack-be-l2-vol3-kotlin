@@ -41,6 +41,10 @@ class CouponModel internal constructor(
     var expiredAt: ZonedDateTime = expiredAt
         protected set
 
+    @Column(name = "max_issuance_count")
+    var maxIssuanceCount: Int? = null
+        protected set
+
     init {
         validateName(name)
         validateValue(value, type)
@@ -89,6 +93,7 @@ class CouponModel internal constructor(
             value: Long,
             minOrderAmount: Long,
             expiredAt: ZonedDateTime,
+            maxIssuanceCount: Int? = null,
         ): CouponModel {
             return CouponModel(
                 name = name,
@@ -96,7 +101,9 @@ class CouponModel internal constructor(
                 value = value,
                 minOrderAmount = minOrderAmount,
                 expiredAt = expiredAt,
-            )
+            ).apply {
+                this.maxIssuanceCount = maxIssuanceCount
+            }
         }
 
         private fun validateName(name: String) {
