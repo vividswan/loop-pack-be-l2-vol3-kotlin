@@ -23,7 +23,7 @@ class OutboxEventHandler(
      * 실패 시 OutboxRelayScheduler가 미발행 건을 재시도한다.
      */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Async("eventTaskExecutor")
+    @Async("outboxTaskExecutor")
     fun handleOutboxPublish(event: OutboxPublishEvent) {
         val outbox = outboxRepository.findById(event.outboxId) ?: run {
             log.warn("Outbox 이벤트를 찾을 수 없음: outboxId={}", event.outboxId)
