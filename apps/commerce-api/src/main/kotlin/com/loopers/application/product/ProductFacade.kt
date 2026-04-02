@@ -5,6 +5,7 @@ import com.loopers.domain.product.ProductService
 import com.loopers.domain.product.ProductSortType
 import com.loopers.infrastructure.product.ProductLocalCacheManager
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
@@ -13,6 +14,7 @@ class ProductFacade(
     private val productService: ProductService,
     private val brandService: BrandService,
     private val productLocalCacheManager: ProductLocalCacheManager,
+    private val eventPublisher: ApplicationEventPublisher,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -52,6 +54,9 @@ class ProductFacade(
 
         val product = productService.getProduct(productId)
         val brand = brandService.getBrand(product.brandId)
+
+        eventPublisher.publishEvent(ProductViewedEvent(productId = productId))
+
         return ProductInfo.from(product, brand)
     }
 }

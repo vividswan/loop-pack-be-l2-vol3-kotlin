@@ -93,7 +93,7 @@ class LikeV1ApiE2ETest @Autowired constructor(
             )
         }
 
-        @DisplayName("좋아요 등록 후 상품 조회하면, 좋아요 수가 1 증가되어 있다.")
+        @DisplayName("좋아요 등록 후 상품 조회하면, 좋아요 수가 1 증가되어 있다. (비동기 집계 대기)")
         @Test
         fun increasesLikeCount_afterLike() {
             // arrange
@@ -111,6 +111,10 @@ class LikeV1ApiE2ETest @Autowired constructor(
                 HttpEntity<Any>(headers),
                 object : ParameterizedTypeReference<ApiResponse<LikeV1Dto.LikeResponse>>() {},
             )
+
+            // 비동기 집계 처리 대기 (AFTER_COMMIT + @Async로 분리되어 eventual consistency)
+            // 테스트 환경에서 Kafka 브로커 없어 send 타임아웃(5s) 후 집계 스레드가 실행됨
+            Thread.sleep(7000)
 
             // assert - 상품 조회
             val productResponse = testRestTemplate.exchange(
@@ -201,7 +205,7 @@ class LikeV1ApiE2ETest @Autowired constructor(
     @Nested
     inner class UnlikeProduct {
 
-        @DisplayName("좋아요 취소하면, 200 OK 응답을 받고 좋아요 수가 감소한다.")
+        @DisplayName("좋아요 취소하면, 200 OK 응답을 받고 좋아요 수가 감소한다. (비동기 집계 대기)")
         @Test
         fun returnsOkAndDecreasesLikeCount() {
             // arrange
@@ -219,6 +223,7 @@ class LikeV1ApiE2ETest @Autowired constructor(
                 HttpEntity<Any>(headers),
                 object : ParameterizedTypeReference<ApiResponse<LikeV1Dto.LikeResponse>>() {},
             )
+            Thread.sleep(7000)
 
             // act - 좋아요 취소
             val response = testRestTemplate.exchange(
@@ -227,6 +232,7 @@ class LikeV1ApiE2ETest @Autowired constructor(
                 HttpEntity<Any>(headers),
                 object : ParameterizedTypeReference<ApiResponse<Unit>>() {},
             )
+            Thread.sleep(7000)
 
             // assert
             assertThat(response.statusCode).isEqualTo(HttpStatus.OK)

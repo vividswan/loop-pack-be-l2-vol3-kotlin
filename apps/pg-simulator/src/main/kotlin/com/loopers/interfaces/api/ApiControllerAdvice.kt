@@ -25,7 +25,9 @@ class ApiControllerAdvice {
 
     @ExceptionHandler
     fun handleBadRequest(e: MethodArgumentTypeMismatchException): ResponseEntity<ApiResponse<*>> {
-        val message = "요청 파라미터 '${e.name}' (타입: ${e.requiredType?.simpleName ?: "unknown"})의 값 '${e.value ?: "null"}'이(가) 잘못되었습니다."
+        val typeName = e.requiredType?.simpleName ?: "unknown"
+        val value = e.value ?: "null"
+        val message = "요청 파라미터 '${e.name}' (타입: $typeName)의 값 '$value'이(가) 잘못되었습니다."
         return failureResponse(errorType = ErrorType.BAD_REQUEST, errorMessage = message)
     }
 

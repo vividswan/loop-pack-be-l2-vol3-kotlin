@@ -33,12 +33,12 @@ class LikeServiceTest {
     @Nested
     inner class Like {
 
-        @DisplayName("처음 좋아요하면, 좋아요가 저장되고 상품의 좋아요 수가 증가한다.")
+        @DisplayName("처음 좋아요하면, 좋아요가 저장된다. (집계는 이벤트로 비동기 처리)")
         @Test
-        fun savesLikeAndIncreasesLikeCount_whenFirstLike() {
+        fun savesLike_whenFirstLike() {
             // arrange
             val product = ProductModel.create(name = "운동화", price = 50000L, stock = 10, brandId = 1L)
-            whenever(productRepository.findByIdWithLock(1L)).thenReturn(product)
+            whenever(productRepository.findById(1L)).thenReturn(product)
             whenever(likeRepository.existsByMemberIdAndProductId(1L, 1L)).thenReturn(false)
             whenever(likeRepository.save(any())).thenAnswer { it.getArgument<LikeModel>(0) }
 
@@ -48,7 +48,7 @@ class LikeServiceTest {
             // assert
             assertThat(result.memberId).isEqualTo(1L)
             assertThat(result.productId).isEqualTo(1L)
-            assertThat(product.likeCount).isEqualTo(1)
+            verify(likeRepository).save(any())
         }
 
         @DisplayName("이미 좋아요한 상품이면, CONFLICT 예외가 발생한다.")
@@ -56,7 +56,7 @@ class LikeServiceTest {
         fun throwsConflict_whenAlreadyLiked() {
             // arrange
             val product = ProductModel.create(name = "운동화", price = 50000L, stock = 10, brandId = 1L)
-            whenever(productRepository.findByIdWithLock(1L)).thenReturn(product)
+            whenever(productRepository.findById(1L)).thenReturn(product)
             whenever(likeRepository.existsByMemberIdAndProductId(1L, 1L)).thenReturn(true)
 
             // act
@@ -72,7 +72,7 @@ class LikeServiceTest {
         @Test
         fun throwsNotFound_whenProductDoesNotExist() {
             // arrange
-            whenever(productRepository.findByIdWithLock(999L)).thenReturn(null)
+            whenever(productRepository.findById(999L)).thenReturn(null)
 
             // act
             val exception = assertThrows<CoreException> {
@@ -88,15 +88,14 @@ class LikeServiceTest {
     @Nested
     inner class Unlike {
 
-        @DisplayName("좋아요 기록이 있으면, 삭제되고 상품의 좋아요 수가 감소한다.")
+        @DisplayName("좋아요 기록이 있으면, 삭제된다. (집계는 이벤트로 비동기 처리)")
         @Test
-        fun deletesLikeAndDecreasesLikeCount_whenLikeExists() {
+        fun deletesLike_whenLikeExists() {
             // arrange
             val product = ProductModel.create(name = "운동화", price = 50000L, stock = 10, brandId = 1L)
-            product.increaseLikeCount()
             val like = LikeModel.create(memberId = 1L, productId = 1L)
 
-            whenever(productRepository.findByIdWithLock(1L)).thenReturn(product)
+            whenever(productRepository.findById(1L)).thenReturn(product)
             whenever(likeRepository.findByMemberIdAndProductId(1L, 1L)).thenReturn(like)
 
             // act
@@ -104,7 +103,6 @@ class LikeServiceTest {
 
             // assert
             verify(likeRepository).delete(like)
-            assertThat(product.likeCount).isEqualTo(0)
         }
 
         @DisplayName("좋아요 기록이 없으면, NOT_FOUND 예외가 발생한다.")
@@ -112,7 +110,7 @@ class LikeServiceTest {
         fun throwsNotFound_whenLikeDoesNotExist() {
             // arrange
             val product = ProductModel.create(name = "운동화", price = 50000L, stock = 10, brandId = 1L)
-            whenever(productRepository.findByIdWithLock(1L)).thenReturn(product)
+            whenever(productRepository.findById(1L)).thenReturn(product)
             whenever(likeRepository.findByMemberIdAndProductId(1L, 1L)).thenReturn(null)
 
             // act
@@ -128,7 +126,7 @@ class LikeServiceTest {
         @Test
         fun throwsNotFound_whenProductDoesNotExist() {
             // arrange
-            whenever(productRepository.findByIdWithLock(999L)).thenReturn(null)
+            whenever(productRepository.findById(999L)).thenReturn(null)
 
             // act
             val exception = assertThrows<CoreException> {
