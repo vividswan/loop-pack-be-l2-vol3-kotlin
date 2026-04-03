@@ -7,7 +7,9 @@ import com.loopers.domain.coupon.CouponType
 import com.loopers.domain.coupon.IssuedCouponModel
 import com.loopers.domain.member.MemberModel
 import com.loopers.domain.product.ProductModel
+import com.loopers.domain.queue.QueueRepository
 import com.loopers.fixtures.MemberTestFixture
+import com.loopers.fixtures.QueueTestFixture
 import com.loopers.infrastructure.brand.BrandJpaRepository
 import com.loopers.infrastructure.coupon.CouponJpaRepository
 import com.loopers.infrastructure.coupon.IssuedCouponJpaRepository
@@ -15,6 +17,7 @@ import com.loopers.infrastructure.member.MemberJpaRepository
 import com.loopers.infrastructure.product.ProductJpaRepository
 import com.loopers.interfaces.api.order.OrderV1Dto
 import com.loopers.utils.DatabaseCleanUp
+import com.loopers.utils.RedisCleanUp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.DisplayName
@@ -40,8 +43,10 @@ class OrderCouponV1ApiE2ETest @Autowired constructor(
     private val productJpaRepository: ProductJpaRepository,
     private val couponJpaRepository: CouponJpaRepository,
     private val issuedCouponJpaRepository: IssuedCouponJpaRepository,
+    private val queueRepository: QueueRepository,
     private val passwordEncoder: PasswordEncoder,
     private val databaseCleanUp: DatabaseCleanUp,
+    private val redisCleanUp: RedisCleanUp,
 ) {
     companion object {
         private const val ORDER_ENDPOINT = "/api/v1/orders"
@@ -50,6 +55,7 @@ class OrderCouponV1ApiE2ETest @Autowired constructor(
     @AfterEach
     fun tearDown() {
         databaseCleanUp.truncateAllTables()
+        redisCleanUp.truncateAll()
     }
 
     private fun createMember(): MemberModel {
@@ -115,6 +121,7 @@ class OrderCouponV1ApiE2ETest @Autowired constructor(
             val product = createProduct(price = 50000L)
             val coupon = createFixedCoupon(value = 5000L)
             val issuedCoupon = issueToMember(member.id, coupon.id)
+            val token = QueueTestFixture.issueTestToken(queueRepository, member.id)
             val headers = MemberTestFixture.createAuthHeaders(
                 MemberTestFixture.DEFAULT_LOGIN_ID,
                 MemberTestFixture.DEFAULT_PASSWORD,
@@ -125,6 +132,7 @@ class OrderCouponV1ApiE2ETest @Autowired constructor(
                     OrderV1Dto.CreateRequest.OrderItemRequest(productId = product.id, quantity = 2),
                 ),
                 couponId = issuedCoupon.id,
+                entryToken = token,
             )
 
             // act
@@ -158,6 +166,7 @@ class OrderCouponV1ApiE2ETest @Autowired constructor(
             val product = createProduct(price = 50000L)
             val coupon = createRateCoupon(value = 10L)
             val issuedCoupon = issueToMember(member.id, coupon.id)
+            val token = QueueTestFixture.issueTestToken(queueRepository, member.id)
             val headers = MemberTestFixture.createAuthHeaders(
                 MemberTestFixture.DEFAULT_LOGIN_ID,
                 MemberTestFixture.DEFAULT_PASSWORD,
@@ -168,6 +177,7 @@ class OrderCouponV1ApiE2ETest @Autowired constructor(
                     OrderV1Dto.CreateRequest.OrderItemRequest(productId = product.id, quantity = 2),
                 ),
                 couponId = issuedCoupon.id,
+                entryToken = token,
             )
 
             // act
@@ -194,6 +204,7 @@ class OrderCouponV1ApiE2ETest @Autowired constructor(
             // arrange
             val member = createMember()
             val product = createProduct(price = 50000L)
+            val token = QueueTestFixture.issueTestToken(queueRepository, member.id)
             val headers = MemberTestFixture.createAuthHeaders(
                 MemberTestFixture.DEFAULT_LOGIN_ID,
                 MemberTestFixture.DEFAULT_PASSWORD,
@@ -203,6 +214,7 @@ class OrderCouponV1ApiE2ETest @Autowired constructor(
                 items = listOf(
                     OrderV1Dto.CreateRequest.OrderItemRequest(productId = product.id, quantity = 2),
                 ),
+                entryToken = token,
             )
 
             // act
@@ -232,6 +244,7 @@ class OrderCouponV1ApiE2ETest @Autowired constructor(
             val product = createProduct(price = 50000L, stock = 1)
             val coupon = createFixedCoupon(value = 5000L)
             val issuedCoupon = issueToMember(member.id, coupon.id)
+            val token = QueueTestFixture.issueTestToken(queueRepository, member.id)
             val headers = MemberTestFixture.createAuthHeaders(
                 MemberTestFixture.DEFAULT_LOGIN_ID,
                 MemberTestFixture.DEFAULT_PASSWORD,
@@ -242,6 +255,7 @@ class OrderCouponV1ApiE2ETest @Autowired constructor(
                     OrderV1Dto.CreateRequest.OrderItemRequest(productId = product.id, quantity = 5),
                 ),
                 couponId = issuedCoupon.id,
+                entryToken = token,
             )
 
             // act
@@ -274,6 +288,7 @@ class OrderCouponV1ApiE2ETest @Autowired constructor(
             issuedCoupon.use()
             issuedCouponJpaRepository.save(issuedCoupon)
 
+            val token = QueueTestFixture.issueTestToken(queueRepository, member.id)
             val headers = MemberTestFixture.createAuthHeaders(
                 MemberTestFixture.DEFAULT_LOGIN_ID,
                 MemberTestFixture.DEFAULT_PASSWORD,
@@ -284,6 +299,7 @@ class OrderCouponV1ApiE2ETest @Autowired constructor(
                     OrderV1Dto.CreateRequest.OrderItemRequest(productId = product.id, quantity = 1),
                 ),
                 couponId = issuedCoupon.id,
+                entryToken = token,
             )
 
             // act
@@ -305,6 +321,7 @@ class OrderCouponV1ApiE2ETest @Autowired constructor(
             // arrange
             val member = createMember()
             val product = createProduct(price = 50000L)
+            val token = QueueTestFixture.issueTestToken(queueRepository, member.id)
             val headers = MemberTestFixture.createAuthHeaders(
                 MemberTestFixture.DEFAULT_LOGIN_ID,
                 MemberTestFixture.DEFAULT_PASSWORD,
@@ -315,6 +332,7 @@ class OrderCouponV1ApiE2ETest @Autowired constructor(
                     OrderV1Dto.CreateRequest.OrderItemRequest(productId = product.id, quantity = 1),
                 ),
                 couponId = 999999L,
+                entryToken = token,
             )
 
             // act
@@ -350,6 +368,7 @@ class OrderCouponV1ApiE2ETest @Autowired constructor(
                 ),
             )
             val issuedCoupon = issueToMember(member.id, expiredCoupon.id)
+            val token = QueueTestFixture.issueTestToken(queueRepository, member.id)
             val headers = MemberTestFixture.createAuthHeaders(
                 MemberTestFixture.DEFAULT_LOGIN_ID,
                 MemberTestFixture.DEFAULT_PASSWORD,
@@ -360,6 +379,7 @@ class OrderCouponV1ApiE2ETest @Autowired constructor(
                     OrderV1Dto.CreateRequest.OrderItemRequest(productId = product.id, quantity = 1),
                 ),
                 couponId = issuedCoupon.id,
+                entryToken = token,
             )
 
             // act
@@ -397,6 +417,7 @@ class OrderCouponV1ApiE2ETest @Autowired constructor(
             val product = createProduct(price = 50000L)
             val coupon = createFixedCoupon(value = 5000L)
             val issuedCoupon = issueToMember(ownerMember.id, coupon.id)
+            val token = QueueTestFixture.issueTestToken(queueRepository, otherMember.id)
 
             // 타 유저의 인증 헤더
             val headers = MemberTestFixture.createAuthHeaders("otheruser", "Other1234!")
@@ -406,6 +427,7 @@ class OrderCouponV1ApiE2ETest @Autowired constructor(
                     OrderV1Dto.CreateRequest.OrderItemRequest(productId = product.id, quantity = 1),
                 ),
                 couponId = issuedCoupon.id,
+                entryToken = token,
             )
 
             // act
@@ -433,6 +455,7 @@ class OrderCouponV1ApiE2ETest @Autowired constructor(
             val product = createProduct(price = 5000L)
             val coupon = createFixedCoupon(value = 3000L, minOrderAmount = 50000L)
             val issuedCoupon = issueToMember(member.id, coupon.id)
+            val token = QueueTestFixture.issueTestToken(queueRepository, member.id)
             val headers = MemberTestFixture.createAuthHeaders(
                 MemberTestFixture.DEFAULT_LOGIN_ID,
                 MemberTestFixture.DEFAULT_PASSWORD,
@@ -443,6 +466,7 @@ class OrderCouponV1ApiE2ETest @Autowired constructor(
                     OrderV1Dto.CreateRequest.OrderItemRequest(productId = product.id, quantity = 1),
                 ),
                 couponId = issuedCoupon.id,
+                entryToken = token,
             )
 
             // act
