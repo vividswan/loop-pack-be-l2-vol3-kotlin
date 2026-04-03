@@ -1,4 +1,4 @@
-### 주문 생성
+### 주문 생성 (대기열 토큰 필요)
 POST {{commerce-api}}/api/v1/orders
 Content-Type: application/json
 X-Loopers-LoginId: testuser
@@ -10,7 +10,8 @@ X-Loopers-LoginPw: Test1234!
       "productId": 1,
       "quantity": 2
     }
-  ]
+  ],
+  "entryToken": "발급받은-토큰-값"
 }
 
 ### 주문 상세 조회
