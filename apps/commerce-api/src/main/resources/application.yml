@@ -67,6 +67,10 @@ spring:
     username: cn=admin,dc=loopers,dc=com
     password: adminpassword
 
+queue:
+  scheduler:
+    enabled: false
+
 pg:
   simulator:
     url: http://localhost:8090
