@@ -7,6 +7,7 @@ class OrderV1Dto {
     data class CreateRequest(
         val items: List<OrderItemRequest>,
         val couponId: Long? = null,
+        val entryToken: String? = null,
     ) {
         data class OrderItemRequest(
             val productId: Long,
@@ -22,6 +23,7 @@ class OrderV1Dto {
                     )
                 },
                 couponId = couponId,
+                entryToken = entryToken,
             )
         }
     }

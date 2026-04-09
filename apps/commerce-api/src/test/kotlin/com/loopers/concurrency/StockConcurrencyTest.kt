@@ -3,7 +3,9 @@ package com.loopers.concurrency
 import com.loopers.domain.brand.BrandModel
 import com.loopers.domain.member.MemberModel
 import com.loopers.domain.product.ProductModel
+import com.loopers.domain.queue.QueueRepository
 import com.loopers.fixtures.MemberTestFixture
+import com.loopers.fixtures.QueueTestFixture
 import com.loopers.infrastructure.brand.BrandJpaRepository
 import com.loopers.infrastructure.member.MemberJpaRepository
 import com.loopers.infrastructure.product.ProductJpaRepository
@@ -11,6 +13,7 @@ import com.loopers.interfaces.api.ApiResponse
 import com.loopers.interfaces.api.order.OrderV1Dto
 import com.loopers.utils.ConcurrencyTestHelper
 import com.loopers.utils.DatabaseCleanUp
+import com.loopers.utils.RedisCleanUp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.DisplayName
@@ -30,12 +33,15 @@ class StockConcurrencyTest @Autowired constructor(
     private val memberJpaRepository: MemberJpaRepository,
     private val brandJpaRepository: BrandJpaRepository,
     private val productJpaRepository: ProductJpaRepository,
+    private val queueRepository: QueueRepository,
     private val passwordEncoder: PasswordEncoder,
     private val databaseCleanUp: DatabaseCleanUp,
+    private val redisCleanUp: RedisCleanUp,
 ) {
     @AfterEach
     fun tearDown() {
         databaseCleanUp.truncateAllTables()
+        redisCleanUp.truncateAll()
     }
 
     private fun createMember(loginId: String): MemberModel {
@@ -66,6 +72,7 @@ class StockConcurrencyTest @Autowired constructor(
         val threadCount = 10
         val product = createProduct(stock = threadCount)
         val members = (1..threadCount).map { createMember("user$it") }
+        val tokens = members.map { QueueTestFixture.issueTestToken(queueRepository, it.id) }
 
         // act
         val results = ConcurrencyTestHelper.executeParallel(threadCount) { index ->
@@ -75,6 +82,7 @@ class StockConcurrencyTest @Autowired constructor(
                 items = listOf(
                     OrderV1Dto.CreateRequest.OrderItemRequest(productId = product.id, quantity = 1),
                 ),
+                entryToken = tokens[index],
             )
             testRestTemplate.exchange(
                 "/api/v1/orders",
@@ -100,6 +108,7 @@ class StockConcurrencyTest @Autowired constructor(
         val stock = 5
         val product = createProduct(stock = stock)
         val members = (1..threadCount).map { createMember("user$it") }
+        val tokens = members.map { QueueTestFixture.issueTestToken(queueRepository, it.id) }
 
         // act
         val results = ConcurrencyTestHelper.executeParallel(threadCount) { index ->
@@ -109,6 +118,7 @@ class StockConcurrencyTest @Autowired constructor(
                 items = listOf(
                     OrderV1Dto.CreateRequest.OrderItemRequest(productId = product.id, quantity = 1),
                 ),
+                entryToken = tokens[index],
             )
             testRestTemplate.exchange(
                 "/api/v1/orders",

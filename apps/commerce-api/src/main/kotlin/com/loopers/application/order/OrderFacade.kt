@@ -10,6 +10,8 @@ import com.loopers.domain.order.OrderCommand
 import com.loopers.domain.order.OrderService
 import com.loopers.domain.outbox.OutboxModel
 import com.loopers.domain.outbox.OutboxRepository
+import com.loopers.domain.queue.QueueErrorCode
+import com.loopers.domain.queue.QueueService
 import com.loopers.support.error.CoreException
 import com.loopers.support.error.ErrorType
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -21,12 +23,17 @@ import org.springframework.transaction.annotation.Transactional
 class OrderFacade(
     private val orderService: OrderService,
     private val couponService: CouponService,
+    private val queueService: QueueService,
     private val eventPublisher: ApplicationEventPublisher,
     private val outboxRepository: OutboxRepository,
     private val objectMapper: ObjectMapper,
 ) {
     @Transactional
     fun createOrder(memberId: Long, command: OrderCommand.CreateOrder): OrderInfo {
+        val entryToken = command.entryToken
+            ?: throw CoreException(ErrorType.FORBIDDEN, QueueErrorCode.TOKEN_REQUIRED)
+        queueService.validateToken(memberId, entryToken)
+
         val order = orderService.createOrder(memberId, command.items)
 
         if (command.couponId != null) {
@@ -90,6 +97,8 @@ class OrderFacade(
             ),
         )
         eventPublisher.publishEvent(OutboxPublishEvent(outbox.id))
+
+        queueService.consumeToken(memberId)
 
         return OrderInfo.from(order)
     }

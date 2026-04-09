@@ -7,7 +7,9 @@ import com.loopers.domain.coupon.CouponType
 import com.loopers.domain.coupon.IssuedCouponModel
 import com.loopers.domain.member.MemberModel
 import com.loopers.domain.product.ProductModel
+import com.loopers.domain.queue.QueueRepository
 import com.loopers.fixtures.MemberTestFixture
+import com.loopers.fixtures.QueueTestFixture
 import com.loopers.infrastructure.brand.BrandJpaRepository
 import com.loopers.infrastructure.coupon.CouponJpaRepository
 import com.loopers.infrastructure.coupon.IssuedCouponJpaRepository
@@ -17,6 +19,7 @@ import com.loopers.interfaces.api.ApiResponse
 import com.loopers.interfaces.api.order.OrderV1Dto
 import com.loopers.utils.ConcurrencyTestHelper
 import com.loopers.utils.DatabaseCleanUp
+import com.loopers.utils.RedisCleanUp
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.DisplayName
@@ -39,12 +42,15 @@ class CouponConcurrencyTest @Autowired constructor(
     private val productJpaRepository: ProductJpaRepository,
     private val couponJpaRepository: CouponJpaRepository,
     private val issuedCouponJpaRepository: IssuedCouponJpaRepository,
+    private val queueRepository: QueueRepository,
     private val passwordEncoder: PasswordEncoder,
     private val databaseCleanUp: DatabaseCleanUp,
+    private val redisCleanUp: RedisCleanUp,
 ) {
     @AfterEach
     fun tearDown() {
         databaseCleanUp.truncateAllTables()
+        redisCleanUp.truncateAll()
     }
 
     private fun createMember(loginId: String): MemberModel {
@@ -92,6 +98,8 @@ class CouponConcurrencyTest @Autowired constructor(
             IssuedCouponModel.create(memberId = member.id, couponId = coupon.id),
         )
 
+        val token = QueueTestFixture.issueTestToken(queueRepository, member.id)
+
         // act
         val results = ConcurrencyTestHelper.executeParallel(threadCount) {
             val headers = MemberTestFixture.createAuthHeaders(member.loginId, MemberTestFixture.DEFAULT_PASSWORD)
@@ -100,6 +108,7 @@ class CouponConcurrencyTest @Autowired constructor(
                     OrderV1Dto.CreateRequest.OrderItemRequest(productId = product.id, quantity = 1),
                 ),
                 couponId = issuedCoupon.id,
+                entryToken = token,
             )
             testRestTemplate.exchange(
                 "/api/v1/orders",

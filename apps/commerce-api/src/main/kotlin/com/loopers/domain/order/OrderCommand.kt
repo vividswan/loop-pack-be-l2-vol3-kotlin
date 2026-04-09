@@ -9,5 +9,6 @@ class OrderCommand {
     data class CreateOrder(
         val items: List<CreateOrderItem>,
         val couponId: Long?,
+        val entryToken: String?,
     )
 }
