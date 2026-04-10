@@ -3,6 +3,7 @@ package com.loopers.interfaces.consumer
 import com.loopers.config.kafka.KafkaConfig
 import com.loopers.domain.metrics.ProductMetricsModel
 import com.loopers.domain.metrics.ProductMetricsRepository
+import com.loopers.domain.ranking.RankingRepository
 import com.loopers.infrastructure.eventhandled.RedisEventHandledManager
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -24,10 +25,16 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class CatalogEventConsumer(
     private val productMetricsRepository: ProductMetricsRepository,
+    private val rankingRepository: RankingRepository,
     private val redisEventHandledManager: RedisEventHandledManager,
     private val objectMapper: ObjectMapper,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
+
+    companion object {
+        private const val VIEW_WEIGHT = 0.1
+        private const val LIKE_WEIGHT = 0.2
+    }
 
     @KafkaListener(
         topics = ["\${event-topics.catalog-events}"],
@@ -65,13 +72,28 @@ class CatalogEventConsumer(
         val metrics = productMetricsRepository.findByProductId(productId)
             ?: productMetricsRepository.save(ProductMetricsModel.create(productId))
 
-        when (eventType) {
-            "PRODUCT_LIKED" -> metrics.incrementLikeCount()
-            "PRODUCT_UNLIKED" -> metrics.decrementLikeCount()
-            "PRODUCT_VIEWED" -> metrics.incrementViewCount()
+        val rankingScore = when (eventType) {
+            "PRODUCT_LIKED" -> {
+                metrics.incrementLikeCount()
+                LIKE_WEIGHT
+            }
+            "PRODUCT_UNLIKED" -> {
+                metrics.decrementLikeCount()
+                -LIKE_WEIGHT
+            }
+            "PRODUCT_VIEWED" -> {
+                metrics.incrementViewCount()
+                VIEW_WEIGHT
+            }
+            else -> 0.0
         }
 
         productMetricsRepository.save(metrics)
+
+        if (rankingScore != 0.0) {
+            rankingRepository.incrementScore(productId, rankingScore)
+        }
+
         redisEventHandledManager.markAsHandled(eventId)
 
         log.debug("catalog 이벤트 처리 완료: eventType={}, productId={}", eventType, productId)

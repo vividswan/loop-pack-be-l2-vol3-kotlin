@@ -3,6 +3,7 @@ package com.loopers.interfaces.consumer
 import com.loopers.config.kafka.KafkaConfig
 import com.loopers.domain.metrics.ProductMetricsModel
 import com.loopers.domain.metrics.ProductMetricsRepository
+import com.loopers.domain.ranking.RankingRepository
 import com.loopers.infrastructure.eventhandled.RedisEventHandledManager
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -18,10 +19,15 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class OrderEventConsumer(
     private val productMetricsRepository: ProductMetricsRepository,
+    private val rankingRepository: RankingRepository,
     private val redisEventHandledManager: RedisEventHandledManager,
     private val objectMapper: ObjectMapper,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
+
+    companion object {
+        private const val ORDER_WEIGHT = 0.7
+    }
 
     @KafkaListener(
         topics = ["\${event-topics.order-events}"],
@@ -69,6 +75,8 @@ class OrderEventConsumer(
 
             metrics.addOrderMetrics(count = quantity, amount = price * quantity)
             productMetricsRepository.save(metrics)
+
+            rankingRepository.incrementScore(productId, ORDER_WEIGHT * quantity)
         }
 
         redisEventHandledManager.markAsHandled(eventId)
