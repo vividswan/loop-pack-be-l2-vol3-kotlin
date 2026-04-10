@@ -1,0 +1,8 @@
+### Top-N 랭킹 조회 (기본 10개)
+GET {{commerce-api}}/api/v1/rankings
+
+### Top-N 랭킹 조회 (20개)
+GET {{commerce-api}}/api/v1/rankings?limit=20
+
+### 특정 상품 순위 조회
+GET {{commerce-api}}/api/v1/rankings/products/1
