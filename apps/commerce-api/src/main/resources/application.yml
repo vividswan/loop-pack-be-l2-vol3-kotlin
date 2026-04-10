@@ -71,6 +71,10 @@ queue:
   scheduler:
     enabled: false
 
+ranking:
+  carry-over:
+    enabled: false
+
 pg:
   simulator:
     url: http://localhost:8090
