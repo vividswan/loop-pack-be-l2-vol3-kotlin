@@ -1,6 +1,7 @@
 package com.loopers.interfaces.api.ranking
 
 import com.loopers.application.ranking.RankingFacade
+import com.loopers.domain.ranking.RankingPeriod
 import com.loopers.interfaces.api.ApiResponse
 import com.loopers.support.error.CoreException
 import com.loopers.support.error.ErrorType
@@ -18,9 +19,10 @@ class RankingV1Controller(
 
     @GetMapping
     override fun getTopRankings(
+        @RequestParam(defaultValue = "DAILY") period: RankingPeriod,
         @RequestParam(defaultValue = "10") limit: Int,
     ): ApiResponse<RankingV1Dto.TopRankingsResponse> {
-        return rankingFacade.getTopRankings(limit.toLong())
+        return rankingFacade.getTopRankings(period, limit.toLong())
             .let { RankingV1Dto.TopRankingsResponse.from(it) }
             .let { ApiResponse.success(it) }
     }
