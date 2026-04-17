@@ -1,5 +1,9 @@
 package com.loopers.interfaces.api
 
+import com.loopers.domain.productrank.MvProductRankMonthlyModel
+import com.loopers.domain.productrank.MvProductRankWeeklyModel
+import com.loopers.infrastructure.ranking.MvProductRankMonthlyJpaRepository
+import com.loopers.infrastructure.ranking.MvProductRankWeeklyJpaRepository
 import com.loopers.interfaces.api.ranking.RankingV1Dto
 import com.loopers.utils.DatabaseCleanUp
 import com.loopers.utils.RedisCleanUp
@@ -16,6 +20,7 @@ import org.springframework.core.ParameterizedTypeReference
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
+import java.time.LocalDate
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class RankingV1ApiE2ETest @Autowired constructor(
@@ -23,6 +28,8 @@ class RankingV1ApiE2ETest @Autowired constructor(
     private val redisTemplate: RedisTemplate<String, String>,
     private val databaseCleanUp: DatabaseCleanUp,
     private val redisCleanUp: RedisCleanUp,
+    private val mvWeeklyJpaRepository: MvProductRankWeeklyJpaRepository,
+    private val mvMonthlyJpaRepository: MvProductRankMonthlyJpaRepository,
 ) {
     companion object {
         private const val RANKINGS_ENDPOINT = "/api/v1/rankings"
@@ -47,9 +54,45 @@ class RankingV1ApiE2ETest @Autowired constructor(
         }
     }
 
-    @DisplayName("GET /api/v1/rankings")
+    private fun seedWeeklyRankingData(vararg entries: Triple<Long, Double, Int>) {
+        val periodKey = MvProductRankWeeklyModel.periodKeyFrom(LocalDate.now())
+        entries.forEach { (productId, score, rank) ->
+            mvWeeklyJpaRepository.save(
+                MvProductRankWeeklyModel.create(
+                    productId = productId,
+                    score = score,
+                    rankPosition = rank,
+                    likeCount = 0,
+                    viewCount = 0,
+                    orderCount = 0,
+                    salesAmount = 0,
+                    periodKey = periodKey,
+                ),
+            )
+        }
+    }
+
+    private fun seedMonthlyRankingData(vararg entries: Triple<Long, Double, Int>) {
+        val periodKey = MvProductRankMonthlyModel.periodKeyFrom(LocalDate.now())
+        entries.forEach { (productId, score, rank) ->
+            mvMonthlyJpaRepository.save(
+                MvProductRankMonthlyModel.create(
+                    productId = productId,
+                    score = score,
+                    rankPosition = rank,
+                    likeCount = 0,
+                    viewCount = 0,
+                    orderCount = 0,
+                    salesAmount = 0,
+                    periodKey = periodKey,
+                ),
+            )
+        }
+    }
+
+    @DisplayName("GET /api/v1/rankings (DAILY - 기본값)")
     @Nested
-    inner class GetTopRankings {
+    inner class GetTopRankingsDaily {
 
         @DisplayName("Redis ZSET에 점수가 있으면, 점수 내림차순으로 Top-N 랭킹을 반환한다.")
         @Test
@@ -130,6 +173,100 @@ class RankingV1ApiE2ETest @Autowired constructor(
             assertAll(
                 { assertThat(response.statusCode).isEqualTo(HttpStatus.OK) },
                 { assertThat(response.body?.data?.rankings).isEmpty() },
+            )
+        }
+    }
+
+    @DisplayName("GET /api/v1/rankings?period=WEEKLY")
+    @Nested
+    inner class GetTopRankingsWeekly {
+
+        @DisplayName("MV 테이블의 주간 랭킹을 점수 순으로 반환한다.")
+        @Test
+        fun returnsWeeklyRankingsFromMvTable() {
+            // arrange
+            seedWeeklyRankingData(
+                Triple(1L, 105.0, 2),
+                Triple(2L, 91.0, 3),
+                Triple(3L, 166.0, 1),
+            )
+
+            // act
+            val responseType = object : ParameterizedTypeReference<ApiResponse<RankingV1Dto.TopRankingsResponse>>() {}
+            val response = testRestTemplate.exchange(
+                "$RANKINGS_ENDPOINT?period=WEEKLY",
+                HttpMethod.GET,
+                null,
+                responseType,
+            )
+
+            // assert
+            val rankings = response.body?.data?.rankings!!
+            assertAll(
+                { assertThat(response.statusCode).isEqualTo(HttpStatus.OK) },
+                { assertThat(rankings).hasSize(3) },
+                { assertThat(rankings[0].productId).isEqualTo(3L) },
+                { assertThat(rankings[0].score).isEqualTo(166.0) },
+                { assertThat(rankings[0].rank).isEqualTo(1L) },
+                { assertThat(rankings[1].productId).isEqualTo(1L) },
+                { assertThat(rankings[1].rank).isEqualTo(2L) },
+                { assertThat(rankings[2].productId).isEqualTo(2L) },
+                { assertThat(rankings[2].rank).isEqualTo(3L) },
+            )
+        }
+
+        @DisplayName("주간 랭킹 데이터가 없으면, 빈 목록을 반환한다.")
+        @Test
+        fun returnsEmptyList_whenNoWeeklyData() {
+            // act
+            val responseType = object : ParameterizedTypeReference<ApiResponse<RankingV1Dto.TopRankingsResponse>>() {}
+            val response = testRestTemplate.exchange(
+                "$RANKINGS_ENDPOINT?period=WEEKLY",
+                HttpMethod.GET,
+                null,
+                responseType,
+            )
+
+            // assert
+            assertAll(
+                { assertThat(response.statusCode).isEqualTo(HttpStatus.OK) },
+                { assertThat(response.body?.data?.rankings).isEmpty() },
+            )
+        }
+    }
+
+    @DisplayName("GET /api/v1/rankings?period=MONTHLY")
+    @Nested
+    inner class GetTopRankingsMonthly {
+
+        @DisplayName("MV 테이블의 월간 랭킹을 점수 순으로 반환한다.")
+        @Test
+        fun returnsMonthlyRankingsFromMvTable() {
+            // arrange
+            seedMonthlyRankingData(
+                Triple(1L, 200.0, 1),
+                Triple(2L, 150.0, 2),
+            )
+
+            // act
+            val responseType = object : ParameterizedTypeReference<ApiResponse<RankingV1Dto.TopRankingsResponse>>() {}
+            val response = testRestTemplate.exchange(
+                "$RANKINGS_ENDPOINT?period=MONTHLY",
+                HttpMethod.GET,
+                null,
+                responseType,
+            )
+
+            // assert
+            val rankings = response.body?.data?.rankings!!
+            assertAll(
+                { assertThat(response.statusCode).isEqualTo(HttpStatus.OK) },
+                { assertThat(rankings).hasSize(2) },
+                { assertThat(rankings[0].productId).isEqualTo(1L) },
+                { assertThat(rankings[0].score).isEqualTo(200.0) },
+                { assertThat(rankings[0].rank).isEqualTo(1L) },
+                { assertThat(rankings[1].productId).isEqualTo(2L) },
+                { assertThat(rankings[1].rank).isEqualTo(2L) },
             )
         }
     }
